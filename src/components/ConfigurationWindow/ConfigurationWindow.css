@@ -37,3 +37,6 @@
     text-align: center;
     margin: 10px;
 }
+
+.dropdown-menu.show {
+}

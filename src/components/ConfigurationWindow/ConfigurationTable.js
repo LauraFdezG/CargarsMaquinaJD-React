@@ -121,25 +121,30 @@ const ConfigurationTable = () => {
             Object.entries(dict.cells).map((value) => {
                 let cell = value[0]
                 let sep = ':'
-                if (cell.length ===3) {sep = sep + '_'}
                 let selected = value[1].selected
                 if (selected) {
                     return (
-                        <div className={'percentage-entry'}>
-                            {cell}{sep}
-                            <Form.Control
-                                type={"text"}
-                                id={cell}
-                                className={"percentage-input"}
-                                value={references.filter(dict => {
-                                    return (
-                                        dict.reference === reference &&
-                                        dict.op_type === op_type
-                                    )})[0].cells[cell]['percentage']
-                            }
-                                onChange={handlePercentageChanged(reference, op_type, cell)}
-                            />
-                        </div>
+                        <Container>
+                            <Row>
+                                <Col sm={1}>
+                                    {cell}:
+                                </Col>
+                                <Col>
+                                    <Form.Control
+                                        type={"text"}
+                                        id={cell}
+                                        className={"percentage-input"}
+                                        value={references.filter(dict => {
+                                            return (
+                                                dict.reference === reference &&
+                                                dict.op_type === op_type
+                                            )})[0].cells[cell]['percentage']
+                                        }
+                                        onChange={handlePercentageChanged(reference, op_type, cell)}
+                                    />
+                                </Col>
+                            </Row>
+                        </Container>
                     )
                 }
             })
