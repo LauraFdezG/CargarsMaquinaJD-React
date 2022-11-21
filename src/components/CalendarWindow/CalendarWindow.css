@@ -1,0 +1,19 @@
+
+.general-calendar-container {
+    position: fixed;
+    top: 54px;
+    width: 100%;
+}
+
+.general-calendar-container .calendar {
+    height: 80vh;
+}
+
+.calendar-header {
+    background: #eeeeee;
+    border-radius: 10px;
+}
+
+.month-container {
+    margin-bottom: 25px !important;
+}
