@@ -126,8 +126,8 @@ const ConfigurationTable = () => {
                     return (
                         <Container>
                             <Row>
-                                <Col sm={1}>
-                                    {cell}:
+                                <Col sm={2}>
+                                    <text>{cell}:</text>
                                 </Col>
                                 <Col>
                                     <Form.Control

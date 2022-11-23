@@ -40,3 +40,9 @@
 
 .dropdown-menu.show {
 }
+
+.percentage-column text {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
