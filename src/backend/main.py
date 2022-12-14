@@ -1,4 +1,5 @@
 import ast
+import json
 import os
 
 import flask
@@ -6,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 from Packages.constants import no_labor_days_folder
-from Packages.get_general_labor_days import get_general_labor_days, save_no_labor_days
+from Packages.get_general_labor_days import get_general_labor_days, save_no_labor_days, get_cell_labor_days
 from Packages.get_master_table import get_master_table
 from Packages.save_master_table import save_master_table
 import warnings
@@ -18,7 +19,10 @@ CORS(app)
 def getPOST():
     data = request.data
     data = data.decode('utf-8')
-    data = ast.literal_eval(data)
+    try:
+        data = ast.literal_eval(data)
+    except ValueError:
+        data = json.loads(data)
     return data
 
 
@@ -55,6 +59,31 @@ def _save_general_calendar():
     path = os.path.join(no_labor_days_folder, 'calendario_general.xlsx')
     calendar_df.to_excel(path, index=False)
     return ''
+
+
+@app.route("/_save_cells_calendar", methods=["POST"])
+def _save_cells_calendar():
+    cells_cal_dict = getPOST()
+    calendar_df = pd.DataFrame.from_records(cells_cal_dict)
+    path = os.path.join(no_labor_days_folder, 'calendario_celulas.xlsx')
+    calendar_df.to_excel(path, index=False)
+    return ''
+
+
+@app.route("/_get_cells_calendar", methods=["GET"])
+def _get_cells_calendar():
+    calendar = get_cell_labor_days()
+    resp = flask.jsonify(calendar)
+    return resp
+
+
+@app.route("/_get_cells_list", methods=["GET"])
+def _get_cells_list():
+    df = get_master_table()
+    df = df.fillna('null')
+    cells = list(set(list(df['Celula'])))
+    resp = flask.jsonify(cells)
+    return resp
 
 
 if __name__ == '__main__':

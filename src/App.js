@@ -4,22 +4,22 @@ import "react-widgets/styles.css";
 import ConfigurationTable from "./components/ConfigurationWindow/ConfigurationTable";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import CalendarWindow from "./components/CalendarWindow/CalendarWindow";
-function App() {
+import DailyCalendarWindow from "./components/CalendarWindow/DailyCalendarWindow";
+import MonthlyCalendarWindow from "./components/CalendarWindow/MonthlyCalendarWindow";
+import CargasMaquinaWindow from "./components/CargasMaquinaWindow/CargasMaquinaWindow";
 
+function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route exact path="/" element={<ConfigurationTable/>}/> // cambiar despues por ref_settings
+                <Route exact path="/reference_settings" element={<ConfigurationTable/>}/>
                 <Route path={"/calendar"} element={<CalendarWindow/>}/>
+                <Route path={"/daily_calendar"} element={<DailyCalendarWindow/>}/>
+                <Route path={"/monthly_calendar"} element={<MonthlyCalendarWindow/>}/>
+                <Route path={"/"} element={<CargasMaquinaWindow/>}/>
             </Routes>
         </BrowserRouter>
     )
-
-    return (
-        <div className="App">
-            <ConfigurationTable/>
-        </div>
-    );
 }
 
 export default App;

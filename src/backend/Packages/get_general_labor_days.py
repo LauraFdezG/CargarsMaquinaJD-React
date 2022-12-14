@@ -103,13 +103,21 @@ def get_labor_days_per_month(cell: str, months: list) -> dict:
     return labor_days
 
 
+def get_cell_labor_days() -> list:
+    path = os.path.join(no_labor_days_folder, 'calendario_celulas.xlsx')
+    d = pd.read_excel(path)
+    no_labor_days_cal = pd.DataFrame(d)
+    no_labor_days_cal = no_labor_days_cal.to_dict('records')
+    return no_labor_days_cal
+
+
 def get_general_labor_days() -> list:
     # get general labor days first
     df = get_default_labor_days_calendar()
     today = dt.datetime.today()
     today = pd.to_datetime(today).floor('D')
     last_day = pd.to_datetime(today.replace(year=today.year + 3)).floor('D')
-    previous_year_day = pd.to_datetime(today.replace(year=today.year -1)).floor('D')
+    previous_year_day = pd.to_datetime(today.replace(year=today.year - 1)).floor('D')
     current_month = get_fiscal_month(date=today)
     last_month = get_fiscal_month(date=last_day)
     previous_year_month = get_fiscal_month(date=previous_year_day)
@@ -146,18 +154,18 @@ def get_general_labor_days() -> list:
     return no_labor_days_cal
 
 
-def get_cell_labor_days(cell: str, df: pd.DataFrame):
-    general_calendar = df
-    # apply cell specific labor days
-    cell_path = os.path.join(no_labor_days_folder, f'{cell}_no_labor_days.json')
-    if os.path.isfile(cell_path):
-        with open(cell_path) as json_file:
-            cell_no_labor_days = json.load(json_file)
-        for no_labor_date in cell_no_labor_days.keys():
-            date = dt.datetime.strptime(no_labor_date, '%d-%m-%Y')
-            general_calendar.loc[general_calendar['Date'] == date, 'habil'] = False
-            general_calendar.loc[general_calendar['Date'] == date, 'Causa'] = cell_no_labor_days[no_labor_date]
-    return general_calendar
+# def get_cell_labor_days(cell: str, df: pd.DataFrame):
+#     general_calendar = df
+#     # apply cell specific labor days
+#     cell_path = os.path.join(no_labor_days_folder, f'{cell}_no_labor_days.json')
+#     if os.path.isfile(cell_path):
+#         with open(cell_path) as json_file:
+#             cell_no_labor_days = json.load(json_file)
+#         for no_labor_date in cell_no_labor_days.keys():
+#             date = dt.datetime.strptime(no_labor_date, '%d-%m-%Y')
+#             general_calendar.loc[general_calendar['Date'] == date, 'habil'] = False
+#             general_calendar.loc[general_calendar['Date'] == date, 'Causa'] = cell_no_labor_days[no_labor_date]
+#     return general_calendar
 
 
 def get_fiscal_month(date: dt.datetime.today()):

@@ -17,3 +17,20 @@
 .month-container {
     margin-bottom: 25px !important;
 }
+
+.calendar-leyend-container {
+    /*margin-top: 90vh;*/
+    margin-top: 90vh;
+    display: flex;
+    justify-content: center;
+}
+
+.calendar-leyend-container text {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #dcdcdc;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 10px;
+    background: #ececec;
+}

@@ -1,0 +1,96 @@
+.daily-cal-container {
+    margin-top: 0px;
+    width: 100%;
+    font-size: smaller !important;
+}
+
+.daily-table-days-header {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    width: 15px;
+}
+
+.daily-cal-head, .daily-cal-body {
+    margin: 0;
+}
+
+.daily-cal-head {
+    position: sticky;
+    top: 112px;
+    background: white;
+}
+
+.daily-cal-head tr:last-child {
+    border-bottom-width: 3px;
+    border-bottom-color: #2c3e4e;
+}
+
+.daily-cal-container.table-responsive {
+    overflow-x: hidden;
+}
+
+.daily-table-days-header {
+    width: 15px !important;
+}
+
+.cell-title-col {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+}
+
+.daily-cal-body td:hover {
+    background: #bfbfbf !important;
+}
+
+.daily-cal-filters-container {
+    position: sticky;
+    margin-top: 54px;
+    background: white;
+    top: 54px;
+    display: flex;
+    align-items: center;
+    z-index: 100;
+}
+
+.daily-cal-filters-container .dropdown {
+    margin: 10px !important;
+}
+.daily-cal-filters-container .dropdown button {
+    color: #004cd8;
+    border-color: #b0b0b0;
+    width: 200px !important;
+}
+
+.daily-cal-filters-container .dropdown .show {
+    width: max-content !important;
+    overflow: scroll;
+    overflow-x: hidden;
+    /*height: 100vh*/
+}
+
+.cellList .dropdown .show  {
+    height: 70vh !important;
+}
+
+.daily-calendar-leyend-container {
+    /*display: flex;*/
+    /*justify-content: center;*/
+    border-width: 1px;
+    border-style: solid;
+    border-color: #dcdcdc;
+    border-radius: 10px;
+    background: #ececec;
+    padding: 5px;
+}
+
+.daily-calendar-leyend-container text {
+    margin: 10px;
+}
+
+
+

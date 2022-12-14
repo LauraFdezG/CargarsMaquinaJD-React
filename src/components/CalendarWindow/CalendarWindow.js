@@ -1,23 +1,24 @@
 import NavBar from "../NavBar";
 import "./CalendarWindow.css"
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import Calendar from 'rc-year-calendar';
 import 'rc-year-calendar/locales/rc-year-calendar.es';
 import LoadingWindow from "../LoadingWindow";
 import PopUp from "./PopUp";
-import {type} from "@testing-library/user-event/dist/type";
-import {json} from "react-router-dom";
 import flaskAddress from "../Constants";
+import createEventTypesColors, {eventTypesColors} from "./EventTypeColors";
+import {Col, Container, Row} from "react-bootstrap";
+import {BsFillSquareFill} from "react-icons/bs"
 
 const CalendarWindow = () => {
-    const [calendarViewMode, setcalendarViewMode] = useState('General')
+    const [calendarViewMode, setcalendarViewMode] = useState('general')
     const [calendarData, setcalendarData] = useState([])
     const [Show, setShow] = useState(false)
     const [eventsSelected, seteventsSelected] = useState([])
     const [dateSelected, setdateSelected] = useState(null)
 
-    // funcion que descarga el calendario general
-    const getGeneralCalendar = async () => {
+    // obtener calendario general al abrir la ventana
+    useEffect(()=> {
         const msg = {
             method:"GET",
             headers: {
@@ -34,38 +35,8 @@ const CalendarWindow = () => {
                     dict.color = eventTypesColors[dict.name]
                 }
                 setcalendarData(calendar)
+                localStorage.setItem('calendarData', JSON.stringify(calendar))
             })
-    }
-
-    // año natural actual
-    const currentYear = new Date().getFullYear();
-
-    // guia de colores para los tipos de eventos
-    const eventTypesColors = {
-        'Fin mes fiscal': '#FCCA03FF',
-        'Fin de Semana':'#ffffff',
-        'Festivo':'#ff0000',
-        'Inhabil':'#0048ff',
-        'Fiesta Comunidad':'#ff5900',
-        'Fiesta Local':'#00ff00',
-        'Parada Programada':'#808080'
-    }
-
-    const createEventTypesColors = {
-        'Festivo':'#ff0000',
-        'Inhabil':'#0048ff',
-        'Fiesta Comunidad':'#ff5900',
-        'Fiesta Local':'#00ff00',
-        'Parada Programada':'#808080'
-    }
-
-     // cambiar modo de visualizacion de calendario
-    const handleCalendarViewModeSelected = () => {
-    }
-
-    // obtener calendario general al abrir la ventana
-    useEffect(()=> {
-        getGeneralCalendar().then(r=>r)
     }, [])
 
     // cerrar el popup
@@ -107,7 +78,6 @@ const CalendarWindow = () => {
             const dict = cal[i]
             const name = dict.name
             const startDate = dict.startDate
-            const endDate = dict.endDate
             if (eventType === name && dateSelected.getTime() === startDate.getTime()) {
                 cal.splice(i, 1)
                 break
@@ -120,6 +90,7 @@ const CalendarWindow = () => {
 
     // guardar los cambios cada que se crea/borra un evento
     const saveChanges = (calendar) => {
+        localStorage.setItem('calendarData', JSON.stringify(calendar))
         const msg = {
             method:"POST",
             headers: {
@@ -135,7 +106,7 @@ const CalendarWindow = () => {
     if (calendarData.length === 0) {
         return (
             <>
-                <NavBar title={'Calendario'} handleCalendarViewMode={handleCalendarViewModeSelected}/>
+                <NavBar title={'Calendario'} currentCalendar={'/calendar'}/>
                 <LoadingWindow/>
             </>
         )
@@ -143,13 +114,13 @@ const CalendarWindow = () => {
 
     return (
         <div>
-            <NavBar title={'Calendario'} handleCalendarViewMode={handleCalendarViewModeSelected}/>
+            <NavBar title={'Calendario'} currentCalendar={'General'}/>
             <div className={'general-calendar-container'}>
                 <Calendar
                     weekStart={1}
                     language={'es'}
                     dataSource={calendarData}
-                    style={'borders'}
+                    Style={'borders'}
                     displayWeekNumber={true}
                     onDayClick={handleShow}
                     // disabledWeekDays={[6, 0]}
@@ -164,6 +135,16 @@ const CalendarWindow = () => {
                    handleDelete={handleDelete}
                    key={calendarData.length}
             />
+            <div className={'calendar-leyend-container'}>
+                {
+                    Object.keys(eventTypesColors).map((eventType)=>{
+                        if (eventType === 'Fin de Semana') return null
+                        return (
+                            <text>{eventType} <BsFillSquareFill style={{color:eventTypesColors[eventType]}}/> </text>
+                        )
+                    })
+                }
+            </div>
         </div>
     )
 }

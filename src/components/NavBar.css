@@ -43,10 +43,6 @@
 
 }
 
-.offcanvas-body h9 {
-    margin-right: 15px;
-}
-
 .offcanvas-body a {
     border: none;
     padding: 10px;
@@ -62,6 +58,13 @@
     margin-bottom: 20px;
     text-decoration: none;
     color: white;
+    display: flex;
+}
+
+.offcanvas-body h4 {
+    width: max-content;
+    margin-right: 15px;
+    margin-bottom: 0;
 }
 
 .save-button {
@@ -84,4 +87,8 @@
     margin: 0;
     border-radius: 10px;
     color: black;
+}
+
+.offcanvas-body.sidebar-icon svg {
+    justify-content: center;
 }

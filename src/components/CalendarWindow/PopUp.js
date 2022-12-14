@@ -21,11 +21,10 @@ const PopUp = (props) => {
                             <Col>
                                 <select className={'date-options-picker'}
                                         value={selectedEventType}
-                                        onChange={(event) => {setselectedEventType(event.target.value)}}
-                                        defaultValue={selectedEventType}>
+                                        onChange={(event) => {setselectedEventType(event.target.value)}}>
                                     {props.eventTypes.map((type, index)=>{
                                         return(
-                                            <option key={index}>{type}</option>
+                                            <option key={type}>{type}</option>
                                         )
                                     })}
                                 </select>
@@ -53,10 +52,10 @@ const PopUp = (props) => {
                         <Modal.Title>Informacion del evento</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        {props.events.map((event) => {
+                        {props.events.map((event, index) => {
                             const forbiddenDeletes = ['Fin de Semana', 'Fin mes fiscal']
                             return (
-                                <Row>
+                                <Row key={index}>
                                     <Col>
                                         Tipo de Evento:
                                     </Col>
@@ -64,7 +63,7 @@ const PopUp = (props) => {
                                         {event.name}
                                     </Col>
                                     <Col>
-                                        {forbiddenDeletes.includes(event.name) ? null : <Button className={'delete-event-button'} variant={'danger'} value={event.name} onClick={props.handleDelete}>Eliminar</Button>}
+                                        {(forbiddenDeletes.includes(event.name) || event.allowDelete === false) ? null : <Button className={'delete-event-button'} variant={'danger'} value={event.name} onClick={props.handleDelete}>Eliminar</Button>}
                                     </Col>
                                 </Row>
                             )

@@ -120,7 +120,6 @@ const ConfigurationTable = () => {
             // eslint-disable-next-line array-callback-return
             Object.entries(dict.cells).map((value) => {
                 let cell = value[0]
-                let sep = ':'
                 let selected = value[1].selected
                 if (selected) {
                     return (
@@ -274,7 +273,8 @@ const ConfigurationTable = () => {
                             defaultValue={selectedRef}
                             data={filersList().refs}
                             placeholder={'Reference'}
-                            value={selectedRef} onChange={(val) => {setselectedRef(val)}}/></Col>
+                            value={selectedRef} onChange={(val) => {setselectedRef(val)}}/>
+                        </Col>
                     </Row>
                     <Row>
                         <Col>Celula: </Col>

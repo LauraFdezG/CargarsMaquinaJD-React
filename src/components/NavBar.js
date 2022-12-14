@@ -1,14 +1,20 @@
 import {FaBars} from "react-icons/fa"
 import "./NavBar.css"
-import {useState} from "react";
+import { useState} from "react";
 import {Button, ButtonGroup, Dropdown, Offcanvas} from "react-bootstrap";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
+import {MdAnalytics} from "react-icons/md"
 
 const windowInfo = [
     {
+        title:"Cargas de Maquina",
+        path: "/",
+        icon: <MdAnalytics className={'side-bar-icon'}/>
+    },
+    {
         title:'Ajustes de Referencia',
-        path: "/", // cambiar despues por ref_settings
+        path: "/reference_settings", // cambiar despues por ref_settings
         icon: <AiFillSetting className={'side-bar-icon'}/>
     },
     {
@@ -19,6 +25,7 @@ const windowInfo = [
 ]
 
 const NavBar = (props) => {
+    let navigate = useNavigate()
     const [showSidebar, setshowSidebar] = useState(false)
 
     // hacer que aparezca el sidebar
@@ -47,12 +54,15 @@ const NavBar = (props) => {
 
     // boton para cambiar el modo de visualizacion del calendario
     const calendarViewModeButton = () => {
-        if (props.handleCalendarViewMode === undefined) {return}
+        const handleCalendarClicked = (event) => {
+            navigate(event.target.value)
+        }
+        if (props.title !== 'Calendario') {return}
         return(
-            <select className={'view-mode-picker'}>
-                <option value="General">General</option>
-                <option value="Mensual">Mensual por Celula</option>
-                <option value="Diario">Diario por Celula</option>
+            <select className={'view-mode-picker'} onChange={handleCalendarClicked} value={props.currentCalendar}>
+                <option value="/calendar">General</option>
+                <option value="/monthly_calendar">Mensual por Celula</option>
+                <option value="/daily_calendar">Diario por Celula</option>
             </select>
         )
     }
@@ -68,13 +78,13 @@ const NavBar = (props) => {
             </div>
             <Offcanvas show={showSidebar} onHide={handleClose}>
                 <Offcanvas.Header closeButton closeVariant={'white'}>
-                    <Offcanvas.Title>Menu</Offcanvas.Title>
+                    <Offcanvas.Title>Cargas de Maquina JD</Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
                     {windowInfo.map((item, key) => {
                         return(
-                            <Link to={item.path}>
-                                <h9 key={key} onClick={handleClose}>{item.title}</h9>
+                            <Link to={item.path} key={key}>
+                                <h4 key={key} onClick={handleClose}>{item.title}</h4>
                                 {item.icon}
                             </Link>
                         )
