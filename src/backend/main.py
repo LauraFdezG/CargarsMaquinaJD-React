@@ -6,7 +6,7 @@ import flask
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-from Packages.constants import no_labor_days_folder
+from Packages.constants import no_labor_days_folder, resources_folder
 from Packages.get_general_labor_days import get_general_labor_days, save_no_labor_days, get_cell_labor_days
 from Packages.get_master_table import get_master_table
 from Packages.save_master_table import save_master_table
@@ -84,6 +84,24 @@ def _get_cells_list():
     cells = list(set(list(df['Celula'])))
     resp = flask.jsonify(cells)
     return resp
+
+
+@app.route("/_get_orders_table", methods=["GET"])
+def _get_orders_table():
+    data = pd.read_excel(os.path.join(resources_folder, "orders_table.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_fiscal_calendar", methods=["GET"])
+def _get_fiscal_calendar():
+    data = pd.read_excel(
+        r"\\fcefactory1\PROGRAMAS_DE_PRODUCCION\6.Planificacion\DOCUMENTOS COMUNES\CALENDARIO FISCAL.xlsx",
+        sheet_name='Calendar')
+    fiscal_calendar_df = pd.DataFrame(data).fillna("null")
+    fiscal_calendar_df = fiscal_calendar_df.to_dict("records")
+    return flask.jsonify(fiscal_calendar_df)
 
 
 if __name__ == '__main__':

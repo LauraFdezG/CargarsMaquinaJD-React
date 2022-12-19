@@ -51,6 +51,7 @@ const MonthlyCalendarWindow = () => {
     const [cellsCalendarData, setcellsCalendarData] = useState([])
     const [cellsFilter, setcellsFilter] = useState([])
     const [teamFilter, setTeamsFilter] = useState([])
+    const [fiscalCal, setfiscalCal] = useState([])
 
     // obtener lista de celulas
     const getCellsList = async () => {
@@ -90,14 +91,39 @@ const MonthlyCalendarWindow = () => {
             })
     }
 
+    // obtener calendario de mes fiscal al calendario general
+    useEffect(()=>{
+        const msg = {
+            method:"GET",
+            headers: {
+                "Content-Type":"application/json"
+            }
+        }
+        fetch(`${flaskAddress}_get_fiscal_calendar`, msg)
+            .then(response => response.json())
+            .then(json => {
+                let cal = json
+                for (let dict of cal) {
+                    dict.Date = new Date(dict.Date)
+                    dict["1st Day Of Fiscal Month"] = new Date(dict["1st Day Of Fiscal Month"])
+                }
+                setfiscalCal(cal)
+            })
+    }, [])
+
     // obtener array de fechas entre los limites y la lista de celulas
     useEffect(()=> {
+        if (fiscalCal.length === 0) {return}
         // fechas de inicio y final
-        const today = new Date()
+        const today = new Date().addDays(-1)
         const lastDate = today.addYear(1).addMonth(6)
         let dateArray = []
         let currentDate = new Date(today.getFullYear(), today.getMonth(), 1)
+        currentDate = fiscalCal.filter(dict=>dict.Date.getDate() === today.getDate() && dict.Date.getMonth() === today.getMonth() && dict.Date.getFullYear() === today.getFullYear())[0]
+        currentDate = currentDate["1st Day Of Fiscal Month"]
         let stopDate = new Date(lastDate.getFullYear(), lastDate.getMonth() +1 , 0) // incluye el ultimo dia del mes
+        stopDate = fiscalCal.filter(dict=> dict.Date.getDate() === stopDate.getDate() && dict.Date.getMonth() === stopDate.getMonth() && dict.Date.getFullYear() === stopDate.getFullYear())[0]
+        stopDate = stopDate["1st Day Of Fiscal Month"].addDays(-1)
         while (currentDate <= stopDate) {
             let dateRow = {
                 year: currentDate.getFullYear(),
@@ -109,9 +135,26 @@ const MonthlyCalendarWindow = () => {
             // agregar 1 dia para la siguiente iteracion
             currentDate = currentDate.addDays(1);
         }
+        for (let dict of dateArray) {
+            let fiscalMonth = fiscalCal.filter(value=>value.Date.getDate() === dict.day && value.Date.getMonth() === dict.month && value.Date.getFullYear() === dict.year)[0]
+            dict.FiscalMonth = new Date(fiscalMonth.FiscalMonth).getMonth()
+            dict.FiscalYear = new Date(fiscalMonth["Fiscal Year"]).getFullYear()
+        }
         setcalendar(dateArray)
+        // console.log(dateArray)
+        // setcalendar(dateArray)
         getCellsList().then(r => r)
-    }, [])
+    }, [fiscalCal])
+
+    // funcion para comprobar si la fecha dada pertenece al mes fiscal. Los meses van de 0-11
+    const isInFiscalMonth = (date: Date, month: number, year: number) => {
+        let calendarDate = calendar.filter(dict=>dict.year === date.getFullYear() && dict.month === date.getMonth() && dict.day === date.getDate())
+        if (calendarDate.length === 0) {
+            return false
+        }
+        else calendarDate = calendarDate[0]
+        return calendarDate.FiscalMonth === month && calendarDate.FiscalYear === year;
+    }
 
     // obtener calendario general, de celulas y descargar tabla maestra al abrir la ventana
     useEffect(()=> {
@@ -144,11 +187,11 @@ const MonthlyCalendarWindow = () => {
 
     // header de años
     const yearsHeader = () => {
-        const years = [...new Set(calendar.map(x=>x.year))]
+        const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         return (
             years.map((year, index)=>{
-                let currentYearCal = calendar.filter(dict=> dict.year === year)
-                let monthsInYear = [...new Set(currentYearCal.map(x=>x.month))]
+                let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
+                let monthsInYear = [...new Set(currentYearCal.map(x=>x.FiscalMonth))]
                 return (
                     <th key={index} colSpan={monthsInYear.length}>{year}</th>
                 )
@@ -158,11 +201,11 @@ const MonthlyCalendarWindow = () => {
 
     // header de meses
     const monthsHeader = () => {
-        const years = [...new Set(calendar.map(x=>x.year))]
+        const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         return (
             years.map(year=>{
-                let currentYearCal = calendar.filter(dict=> dict.year === year)
-                let months = [...new Set(currentYearCal.map(x=>x.month))]
+                let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
+                let months = [...new Set(currentYearCal.map(x=>x.FiscalMonth))]
                 return (
                     months.map((month, index)=>{
                         return (
@@ -180,15 +223,15 @@ const MonthlyCalendarWindow = () => {
 
     // obetener dias laborales por cada mes del año
     const getLaborDaysPerMonth = (cell) => {
-        const years = [...new Set(calendar.map(x=>x.year))]
+        const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         return (
             years.map(year=>{
-                let currentYearCal = calendar.filter(dict=> dict.year === year)
-                let months = [...new Set(currentYearCal.map(x=>x.month))]
+                let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
+                let months = [...new Set(currentYearCal.map(x=>x.FiscalMonth))]
                 return (
                     months.map((month, index)=>{
-                        let currentMonthCal = currentYearCal.filter(dict=>dict.month === month)
-                        let monthData = calendarData.filter(dict => dict.startDate.getFullYear() === year && dict.startDate.getMonth() === month && dict.name !== "Fin mes fiscal")
+                        let currentMonthCal = currentYearCal.filter(dict=>dict.FiscalMonth === month)
+                        let monthData = calendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.name !== "Fin mes fiscal")
                         // filtrar fechas duplicadas
                         let addedDates = []
                         let filteredMonthData = []
@@ -202,7 +245,7 @@ const MonthlyCalendarWindow = () => {
                         let cellMonthData = []
                         let bg_color = "white"
                         if (cell !== null) {
-                            cellMonthData = cellsCalendarData.filter(dict => dict.startDate.getFullYear() === year && dict.startDate.getMonth() === month && dict.celula.toString() === cell.toString() && dict.name !== "Fin mes fiscal")
+                            cellMonthData = cellsCalendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.celula.toString() === cell.toString() && dict.name !== "Fin mes fiscal")
                             for (let dict of cellMonthData) {
                                 let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
                                 if (addedDates.includes(date) === false) {
@@ -216,7 +259,7 @@ const MonthlyCalendarWindow = () => {
                             return (
                                 <td key={index} style={{background:bg_color}} data-value={JSON.stringify(cellMonthData)} onClick={handleMonthClicked}>
                                     <div className={'cell-title-col'} style={{justifyContent: "flex-start"}} onClick={handleMonthClicked} id={JSON.stringify(cellMonthData)}>
-                                        {currentMonthCal.length - filteredMonthData.length}
+                                        {currentMonthCal.length -filteredMonthData.length}
                                     </div>
                                 </td>
 
@@ -227,7 +270,6 @@ const MonthlyCalendarWindow = () => {
                                 <text className={'cell-title-col'} style={{justifyContent: "flex-start"}}>
                                     {currentMonthCal.length - filteredMonthData.length}
                                 </text>
-
                             </th>
                         )
                     })
@@ -265,7 +307,7 @@ const MonthlyCalendarWindow = () => {
     }
 
     // pantalla de carga mientras se obtienen los datos
-    if (calendarData.length === 0 || masterTable.length === 0 ||cellsList.length === 0) {
+    if (calendarData.length === 0 || masterTable.length === 0 ||cellsList.length === 0 || fiscalCal.length === 0) {
         return (
             <div>
                 <NavBar title={'Calendario'} currentCalendar={'/monthly_calendar'}/>
