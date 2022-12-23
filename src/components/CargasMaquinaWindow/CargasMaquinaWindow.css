@@ -1,0 +1,72 @@
+
+.production-table-container {
+    margin-top: 54px;
+    padding: 50px;
+    padding-top: 10px;
+}
+
+.production-table {
+    font-size: 12px;
+}
+
+.production-table th {
+    font-weight: 700;
+}
+
+.production-table-title {
+    display: flex;
+    justify-content: center;
+}
+
+td.production-table-separator {
+    box-shadow: none !important;
+    border-width: 0 !important;
+    height: 50px !important;
+}
+
+td.secondary-table-right-filler {
+    box-shadow: none !important;
+    background-color: #f0f0f0;
+}
+
+.cargas-maquina-settings-container {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    column-gap: 20px;
+    border-style: solid;
+    border-color: #cccccc;
+    border-width: 2px;
+    border-radius: 8px;
+    width: fit-content;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+input.cargas-maquina-settings-n-input {
+    border: #cccccc 1px solid;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+    height: 38px;
+    width: 100px;
+    padding: 8px;
+    color: #484f56;
+}
+
+input.parts-produced-entry {
+    border-width: 0;
+    background: transparent;
+    width: 75%;
+    padding: 0;
+}
+
+.restore-qty-value {
+    background: transparent;
+    width: min-content;
+    height: min-content;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+}
+

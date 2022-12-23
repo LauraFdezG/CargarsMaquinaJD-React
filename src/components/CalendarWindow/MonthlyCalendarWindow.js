@@ -262,7 +262,6 @@ const MonthlyCalendarWindow = () => {
                                         {currentMonthCal.length -filteredMonthData.length}
                                     </div>
                                 </td>
-
                             )
                         }
                         return (

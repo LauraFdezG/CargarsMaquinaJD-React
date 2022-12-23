@@ -104,6 +104,14 @@ def _get_fiscal_calendar():
     return flask.jsonify(fiscal_calendar_df)
 
 
+@app.route("/_get_cell_settings", methods=["GET"])
+def _get_cell_settings():
+    data = pd.read_excel(os.path.join(resources_folder, "ajustes_celula_cargas_de_maquina.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     app.run(debug=True, host="0.0.0.0")
