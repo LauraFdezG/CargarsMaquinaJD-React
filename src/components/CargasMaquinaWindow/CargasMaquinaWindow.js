@@ -286,12 +286,32 @@ const CargasMaquinaWindow = () => {
         let cellInfo = JSON.parse(event.target.id)
         let qty = parseInt(event.target.value)
         if (isNaN(qty)) {qty = 0}
+        let orderExists = false
         for (let dict of ordersTable) {
             if (dict.FiscalMonth === cellInfo.fiscalMonth && dict["Reference"] === cellInfo.reference) {
                 dict.Qty = qty
                 dict.editedCell = true
                 if (dict.Qty === dict.originalQty) {dict.editedCell = false}
+                orderExists = true
                 break
+            }
+        }
+        if (!orderExists) {
+            for (let dict of ordersTable) {
+                if (dict["Reference"] === cellInfo.reference) {
+                    let newDict = {...dict}
+                    newDict.Qty = qty
+                    newDict.editedCell = true
+                    newDict.FiscalMonth = cellInfo.fiscalMonth
+                    newDict["Text Fiscal Month"] = cellInfo.fiscalMonth
+                    newDict["Fiscal Month"] = "NaN"
+                    newDict.originalQty = 0
+                    if (newDict.Qty === newDict.originalQty) {
+                        newDict.editedCell = false
+                    }
+                    orders.push(newDict)
+                    break
+                }
             }
         }
         setordersTable(orders)
