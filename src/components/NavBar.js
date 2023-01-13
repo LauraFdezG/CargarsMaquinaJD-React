@@ -5,6 +5,8 @@ import {Button, ButtonGroup, Dropdown, Offcanvas} from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
 import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
 import {MdAnalytics} from "react-icons/md"
+import logo from "../resources/johnDeereLogo.png"
+import {FaTruckMonster} from "react-icons/fa"
 
 const windowInfo = [
     {
@@ -78,14 +80,20 @@ const NavBar = (props) => {
             </div>
             <Offcanvas show={showSidebar} onHide={handleClose}>
                 <Offcanvas.Header closeButton closeVariant={'white'}>
-                    <Offcanvas.Title>Cargas de Maquina JD</Offcanvas.Title>
+                    <Offcanvas.Title>
+                        <div className={'navbar-title'}>
+                            Cargas de Maquina JD <FaTruckMonster/>
+                        </div>
+                    </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
                     {windowInfo.map((item, key) => {
                         return(
                             <Link to={item.path} key={key}>
-                                <h4 key={key} onClick={handleClose}>{item.title}</h4>
-                                {item.icon}
+                                <div className={'navbar-option'}>
+                                    {item.icon}
+                                    <h4 key={key} onClick={handleClose}>{item.title}</h4>
+                                </div>
                             </Link>
                         )
                     })}
