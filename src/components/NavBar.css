@@ -92,3 +92,13 @@
 .offcanvas-body.sidebar-icon svg {
     justify-content: center;
 }
+
+.navbar-option {
+    display: flex;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.navbar-title svg{
+    font-size: 35px;
+}
