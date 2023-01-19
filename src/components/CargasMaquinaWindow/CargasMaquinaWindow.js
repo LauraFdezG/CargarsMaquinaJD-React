@@ -7,6 +7,8 @@ import LoadingWindow from "../LoadingWindow";
 import {DropdownList} from "react-widgets/cjs";
 import {eventTypesColors} from "../CalendarWindow/EventTypeColors";
 import {BsArrowCounterclockwise} from "react-icons/bs"
+import { saveAs } from 'file-saver';
+import UploadFilePopUp from "./UploadFilePopUp";
 
 const monthDictionary = {
     0:'Ene',
@@ -38,6 +40,9 @@ const CargasMaquinaWindow = () => {
     const [absentismoCell, setabsentismoCell] = useState(0.08)
     const [nOperarios, setnOperarios] = useState(4.2)
     const [cellSettings, setcellSettings] = useState([])
+    const [isButtonLoading, setisButtonLoading] = useState(false)
+    const [showPopUp, setshowPopUp] = useState(false)
+    const [originalCellSettings, setoriginalCellSettings] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -242,8 +247,22 @@ const CargasMaquinaWindow = () => {
         fetch(`${flaskAddress}_get_cell_settings`, msg)
             .then(response => response.json())
             .then(json => {
+                for (let dict of json) {
+                    dict.OriginalPRODUCTIVIDAD = dict.PRODUCTIVIDAD
+                    dict.OriginalABSENTISMO = dict.ABSENTISMO
+                }
                 setcellSettings(json)
             })
+    }
+
+    // crear diccionario de Nro de Operarios por mes
+    const setNOpDict = (nOp) => {
+        let nOps = {}
+        for (let month in cellLaborDays) {
+            nOps[month] = nOp
+            nOps["originalValue"] = nOp
+        }
+        setnOperarios(nOps)
     }
 
     // descargar configuraciones, celulas, tabla maestra, tabla de ordenes
@@ -269,7 +288,7 @@ const CargasMaquinaWindow = () => {
         setcellMasterTable(filteredTable)
         let settings = [...cellSettings]
         settings = settings.filter(dict => dict.CELULA.toString() === selectedCell.toString())[0]
-        setnOperarios(settings.N_OPERARIOS)
+        setNOpDict(settings.N_OPERARIOS)
         setproductividadCell(settings.PRODUCTIVIDAD)
         setabsentismoCell(settings.ABSENTISMO)
     }, [masterTable, selectedCell, cellSettings])
@@ -348,6 +367,44 @@ const CargasMaquinaWindow = () => {
             }
         }
         setmasterTable(mTable)
+    }
+
+    // handler para cuando se cambia el numero de operarios en un mes especifico
+    const handleNOperariosChanged = (newValue, changedMonth) => {
+        let nOps = {...nOperarios}
+        for (let month in nOps) {
+            if (month === changedMonth) {
+                nOps[month] = newValue
+                break
+            }
+        }
+        setnOperarios(nOps)
+    }
+
+    // handler para productividad cambiada
+    const handleProductividadChanged = (event) => {
+        const newValue = parseFloat(event.target.value)
+        let settings = [...cellSettings]
+        for (let dict of settings) {
+            if (dict.CELULA.toString() === selectedCell.toString()) {
+                dict.PRODUCTIVIDAD = newValue
+                setproductividadCell(newValue)
+                break
+            }
+        }
+    }
+
+    // handler para productividad cambiada
+    const handleAbsentismoChanged = (event) => {
+        const newValue = parseFloat(event.target.value)
+        let settings = [...cellSettings]
+        for (let dict of settings) {
+            if (dict.CELULA.toString() === selectedCell.toString()) {
+                dict.ABSENTISMO = newValue
+                setabsentismoCell(newValue)
+                break
+            }
+        }
     }
 
     // restaurar valor de horas STD
@@ -444,6 +501,82 @@ const CargasMaquinaWindow = () => {
             )
     }
 
+    // boton de absentismo y de productividad
+    const cellSettingsInputs = () => {
+        let settings = [...cellSettings]
+        settings = settings.filter(dict => dict.CELULA.toString() === selectedCell.toString())[0]
+        let prodColor = "#000000"
+        let absColor = "#000000"
+        if (settings.OriginalPRODUCTIVIDAD !== productividadCell) {
+            prodColor = "#ffad00"
+        }
+        if (settings.OriginalABSENTISMO !== absentismoCell) {
+            absColor = "#ffad00"
+        }
+        return (
+            <>
+                <h6>Productividad:</h6>
+                <input className={'cargas-maquina-settings-n-input'} value={productividadCell} type={"number"} step={0.01} onChange={handleProductividadChanged} style={{borderColor:prodColor}}/>
+                <h6>Absentismo:</h6>
+                <input className={'cargas-maquina-settings-n-input'} value={absentismoCell} type={"number"} step={0.01} onChange={handleAbsentismoChanged} style={{borderColor:absColor}}/>
+            </>
+        )
+    }
+
+    // restaurar ajustes de celula a su valor original
+    const restoreCellSettings = () => {
+        let settings = [...cellSettings]
+        for (let dict of settings) {
+            if (dict.CELULA.toString() === selectedCell.toString()) {
+                dict.PRODUCTIVIDAD = dict.OriginalPRODUCTIVIDAD
+                dict.ABSENTISMO = dict.OriginalABSENTISMO
+                break
+            }
+        }
+        setcellSettings(settings)
+    }
+
+    // handler para descargar la simulacion realizada
+    const handleSaveSimulation = () => {
+        setisButtonLoading(true)
+        const contentsDict = {
+            ordersTable: ordersTable,
+            nOperarios: [nOperarios],
+            masterTable: masterTable,
+            cellSettings: cellSettings
+        }
+        const body = {
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json",
+            },
+            body: JSON.stringify(contentsDict)
+        }
+        // TODO ARREGLAR QUE EL ARCHIVO NO SE ESTA DESCARGANDO CON EL NOMBRE ADECUADO
+        fetch(`${flaskAddress}_export_simulation`, body)
+            .then(res => res.blob())
+            .then(blob => {
+                let FileSaver = require('file-saver');
+                FileSaver.saveAs(blob, "simulation.xlsx");
+            })
+            .then(r => setisButtonLoading(false))
+    }
+
+    const handleImportSimulation = () => {
+        setshowPopUp(true)
+    }
+
+    const closePopUp = () => {
+        setshowPopUp(false)
+    }
+
+    const applySimulationData = (response) => {
+        setmasterTable(response.masterTable)
+        setordersTable(response.ordersTable)
+        setnOperarios(response.nOperarios)
+        setcellSettings(response.cellSettings)
+    }
+
     // pantalla de carga
     if (calendar.length* masterTable.length* cellsList.length* fiscalCal.length * ordersTable.length * cellSettings.length === 0) {
         return (
@@ -456,7 +589,12 @@ const CargasMaquinaWindow = () => {
 
     return (
         <div>
-            <NavBar title={"Cargas de Maquina"}/>
+            <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
+            <NavBar title={"Cargas de Maquina"}
+                    handleSaveSimulation={handleSaveSimulation}
+                    isCargaMaquinaButtonLoading={isButtonLoading}
+                    handleImportSimulation={handleImportSimulation}
+            />
             <div className={"production-table-container"}>
                 <h5>Ajustes de celula</h5>
                 <div className={'cargas-maquina-settings-container'}>
@@ -467,12 +605,8 @@ const CargasMaquinaWindow = () => {
                         data={cellsList}
                         placeholder={'Celula'}
                         value={selectedCell} onChange={(val) => {setselectedCell(val)}}/>
-                    <h6>Productividad:</h6>
-                    <input className={'cargas-maquina-settings-n-input'} value={productividadCell} type={"number"} step={0.01} onChange={event => setproductividadCell(parseFloat(event.target.value))}/>
-                    <h6>Absentismo:</h6>
-                    <input className={'cargas-maquina-settings-n-input'} value={absentismoCell} type={"number"} step={0.01} onChange={event => setabsentismoCell(parseFloat(event.target.value))}/>
-                    <h6>Nro Operarios:</h6>
-                    <input className={'cargas-maquina-settings-n-input'} value={nOperarios} type={"number"} step={0.01} onChange={event => setnOperarios(parseFloat(event.target.value))}/>
+                    {cellSettingsInputs()}
+                    <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
                 </div>
                 <Table striped bordered hover className={"production-table"} size={"sm"}>
                     <thead>
@@ -585,7 +719,7 @@ const CargasMaquinaWindow = () => {
                                         totalHrsSTD += dict.Qty * hrsSTD/100
                                     }
                                 }
-                                let hrsDisponibles = (nOperarios*laborDays*8)/(1+absentismoCell)
+                                let hrsDisponibles = (nOperarios[value]*laborDays*8)/(1+absentismoCell)
                                 return (
                                     <td key={index}>{hrsDisponibles.toFixed(2)}</td>
                                 )
@@ -595,8 +729,15 @@ const CargasMaquinaWindow = () => {
                         <tr>
                             <th colSpan={2}>Nº OP ACTUALES</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
+                                let style = {background: nOperarios[value] !== nOperarios.originalValue ? "rgba(255,165,0,0.82)" : "none"}
                                 return (
-                                    <td key={index}>{nOperarios}</td>
+                                    <td key={index} style={style}>
+                                        <input value={nOperarios[value]} className={'parts-produced-entry'} onChange={event => handleNOperariosChanged(event.target.value, value)}/>
+                                        {nOperarios[value] !== nOperarios.originalValue ?
+                                            <button id={value} onClick={event => handleNOperariosChanged(nOperarios.originalValue, event.target.id)} className={"restore-qty-value"}>
+                                                <BsArrowCounterclockwise id={value}/>
+                                            </button> : null}
+                                    </td>
                                 )
                             })}
                             <td colSpan={5} className={"secondary-table-right-filler"}></td>
@@ -616,8 +757,9 @@ const CargasMaquinaWindow = () => {
                                 }
                                 totalHrsSTD = totalHrsSTD/productividadCell
                                 let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-absentismoCell))
+                                let style = {background: nroOpNecesarios > nOperarios[value] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
                                 return (
-                                    <td key={index}>{nroOpNecesarios.toFixed(2)}</td>
+                                    <td key={index} style={style}>{nroOpNecesarios.toFixed(2)}</td>
                                 )
                             })}
                             <td colSpan={5} className={"secondary-table-right-filler"}></td>

@@ -6,7 +6,7 @@ import {Link, useNavigate} from "react-router-dom";
 import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
 import {MdAnalytics} from "react-icons/md"
 import logo from "../resources/johnDeereLogo.png"
-import {FaTruckMonster} from "react-icons/fa"
+import {SiJohndeere} from "react-icons/si"
 
 const windowInfo = [
     {
@@ -54,6 +54,27 @@ const NavBar = (props) => {
         }
     }
 
+    // boton de guardar simulacion de carga de maquina
+    const saveCargaMaquinaSimulation = () => {
+        if (props.title === "Cargas de Maquina") {
+            return (
+                <>
+                <Dropdown as={ButtonGroup} className={'save-button'}>
+                    <Button variant="primary" onClick={props.handleSaveSimulation} disabled={!!props.isCargaMaquinaButtonLoading}>
+                        {props.isCargaMaquinaButtonLoading ? "Descargando...." : "Guardar Simulacion"}
+                    </Button>
+                    <Dropdown.Toggle split variant="primary" id="dropdown-split-basic" />
+                    <Dropdown.Menu>
+                        <Dropdown.Item disabled={!!props.isCargaMaquinaButtonLoading} onClick={props.handleImportSimulation}>
+                            {props.isCargaMaquinaButtonLoading ? "Descargando..." : "Importar Simulacion"}
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
+                </>
+            )
+        }
+    }
+
     // boton para cambiar el modo de visualizacion del calendario
     const calendarViewModeButton = () => {
         const handleCalendarClicked = (event) => {
@@ -77,12 +98,13 @@ const NavBar = (props) => {
                 <h4>{props.title}</h4>
                 {refSaveButton()}
                 {calendarViewModeButton()}
+                {saveCargaMaquinaSimulation()}
             </div>
             <Offcanvas show={showSidebar} onHide={handleClose}>
                 <Offcanvas.Header closeButton closeVariant={'white'}>
                     <Offcanvas.Title>
                         <div className={'navbar-title'}>
-                            Cargas de Maquina JD <FaTruckMonster/>
+                            <SiJohndeere/> Cargas de Maquina JD
                         </div>
                     </Offcanvas.Title>
                 </Offcanvas.Header>

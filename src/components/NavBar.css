@@ -100,5 +100,12 @@
 }
 
 .navbar-title svg{
+    margin-top: 5px;
     font-size: 35px;
+}
+
+.navbar-title {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
 }

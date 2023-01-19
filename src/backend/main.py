@@ -1,9 +1,9 @@
 import ast
 import json
 import os
-
+import io
 import flask
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 import pandas as pd
 from Packages.constants import no_labor_days_folder, resources_folder
@@ -11,6 +11,8 @@ from Packages.get_general_labor_days import get_general_labor_days, save_no_labo
 from Packages.get_master_table import get_master_table
 from Packages.save_master_table import save_master_table
 import warnings
+
+from Packages.send_excel_as_response import send_excel_as_response
 
 app = Flask(__name__)
 CORS(app)
@@ -110,6 +112,29 @@ def _get_cell_settings():
     df = pd.DataFrame(data)
     df = df.to_dict("records")
     return flask.jsonify(df)
+
+
+@app.route("/_export_simulation", methods=["POST"])
+def export_simulation():
+    content_dict = getPOST()
+    for key in content_dict:
+        data = content_dict[key]
+        df = pd.DataFrame.from_records(data)
+        content_dict[key] = df
+    # orders_df = pd.DataFrame.from_records(content_dict["ordersTable"])
+    return send_excel_as_response(content_dict, filename="simulation")
+
+
+@app.route("/_import_simulation", methods=["POST"])
+def import_simulation():
+    uploaded_file = request.files['file']
+    sheet_names = pd.ExcelFile(uploaded_file).sheet_names
+    response = {}
+    for sheet_name in sheet_names:
+        df = pd.DataFrame(pd.read_excel(uploaded_file, sheet_name=sheet_name))
+        df = df.fillna("null")
+        response[sheet_name] = df.to_dict("records")
+    return flask.jsonify(response)
 
 
 if __name__ == '__main__':
