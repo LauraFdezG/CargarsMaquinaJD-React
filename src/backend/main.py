@@ -137,6 +137,13 @@ def import_simulation():
     return flask.jsonify(response)
 
 
+@app.route("/_get_monthly_nops", methods=["GET"])
+def get_monthly_nops():
+    with open(os.path.join(resources_folder, "nro_op_mensual.json")) as json_file:
+        data = json.load(json_file)
+        return flask.jsonify(data)
+
+
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     app.run(debug=True, host="0.0.0.0")
