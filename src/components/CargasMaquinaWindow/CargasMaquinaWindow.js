@@ -42,7 +42,6 @@ const CargasMaquinaWindow = () => {
     const [cellSettings, setcellSettings] = useState([])
     const [isButtonLoading, setisButtonLoading] = useState(false)
     const [showPopUp, setshowPopUp] = useState(false)
-    const [originalCellSettings, setoriginalCellSettings] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -60,6 +59,7 @@ const CargasMaquinaWindow = () => {
                     dict.editedCell = false
                     dict.originalHrsSTD = dict.HorasSTD
                 }
+                json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
                 setmasterTable(json)
             })
     }
