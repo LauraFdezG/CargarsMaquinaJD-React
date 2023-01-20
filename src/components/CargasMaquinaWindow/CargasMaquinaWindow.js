@@ -489,7 +489,7 @@ const CargasMaquinaWindow = () => {
         })
         totalQty = totalQty*productionPerc
         let maxTurno = (8*1.42/hrsSTD*100)
-        let avgTurno = (8*productividadCell*(1-absentismoCell)/hrsSTD*100)
+        let avgTurno = (maxTurno*productividadCell)
         return (
             <>
                 <td>{totalQty.toFixed(0)}</td>
