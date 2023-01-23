@@ -1,0 +1,8 @@
+.error-message {
+    font-size: xxx-large;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}

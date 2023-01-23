@@ -22,7 +22,6 @@ const UploadFilePopUp = (props) => {
         fetch(`${flaskAddress}_import_simulation`, body)
             .then(response => response.json())
             .then(json => {
-                console.log(json)
                 props.applySimulationData(json)
             })
         props.close()

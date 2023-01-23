@@ -7,6 +7,7 @@ import CalendarWindow from "./components/CalendarWindow/CalendarWindow";
 import DailyCalendarWindow from "./components/CalendarWindow/DailyCalendarWindow";
 import MonthlyCalendarWindow from "./components/CalendarWindow/MonthlyCalendarWindow";
 import CargasMaquinaWindow from "./components/CargasMaquinaWindow/CargasMaquinaWindow";
+import ErrorWindow from "./components/CargasMaquinaWindow/ErrorWindow";
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                 <Route path={"/daily_calendar"} element={<DailyCalendarWindow/>}/>
                 <Route path={"/monthly_calendar"} element={<MonthlyCalendarWindow/>}/>
                 <Route path={"/"} element={<CargasMaquinaWindow/>}/>
+                <Route path={"/error"} element={<ErrorWindow/>} />
             </Routes>
         </BrowserRouter>
     )

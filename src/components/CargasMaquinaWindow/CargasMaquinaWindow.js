@@ -9,6 +9,8 @@ import {eventTypesColors} from "../CalendarWindow/EventTypeColors";
 import {BsArrowCounterclockwise} from "react-icons/bs"
 import { saveAs } from 'file-saver';
 import UploadFilePopUp from "./UploadFilePopUp";
+import {json, useNavigate} from "react-router-dom";
+import AddReferencePopUp from "./AddReferencePopUp";
 
 const monthDictionary = {
     0:'Ene',
@@ -26,6 +28,7 @@ const monthDictionary = {
 }
 
 const CargasMaquinaWindow = () => {
+    let navigate = useNavigate()
     const [calendar, setcalendar] = useState([])
     const [selectedCell, setselectedCell] = useState("147")
     const [cellsList, setcellsList] = useState([])
@@ -42,6 +45,9 @@ const CargasMaquinaWindow = () => {
     const [cellSettings, setcellSettings] = useState([])
     const [isButtonLoading, setisButtonLoading] = useState(false)
     const [showPopUp, setshowPopUp] = useState(false)
+    const [montlyNOps, setmonthlyNOps] = useState({})
+    const [showAddRefPopUp, setshowAddRefPopUp] = useState(false)
+    const [originalMasterTable, setoriginalMasterTable] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -61,6 +67,7 @@ const CargasMaquinaWindow = () => {
                 }
                 json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
                 setmasterTable(json)
+                setoriginalMasterTable(json)
             })
     }
 
@@ -105,7 +112,7 @@ const CargasMaquinaWindow = () => {
         if (fiscalCal.length === 0) {return}
         // fechas de inicio y final
         const today = new Date().addDays(-1).addMonth(1)
-        const lastDate = today.addYear(1).addMonth(6)
+        const lastDate = today.addYear(1).addMonth(6) // TODO CAMBIAR AQUI EL NUMERO DE MESES
         let dateArray = []
         let currentDate = new Date(today.getFullYear(), today.getMonth(), 1)
         currentDate = fiscalCal.filter(dict=>dict.Date.getDate() === today.getDate() && dict.Date.getMonth() === today.getMonth() && dict.Date.getFullYear() === today.getFullYear())[0]
@@ -255,12 +262,35 @@ const CargasMaquinaWindow = () => {
             })
     }
 
+    // obetener nro operarios mensuales distintos al default
+    const getMonthlyNOps = async () => {
+        const msg = {
+            method:"GET",
+            headers: {
+                "Content-Type":"application/json"
+            }
+        }
+        fetch(`${flaskAddress}_get_monthly_nops`, msg)
+            .then(response => response.json())
+            .then(json => {
+                setmonthlyNOps(json)
+            })
+    }
+
     // crear diccionario de Nro de Operarios por mes
-    const setNOpDict = (nOp) => {
+    const setNOpDict = () => {
+        let montlynops = {...montlyNOps}
         let nOps = {}
-        for (let month in cellLaborDays) {
-            nOps[month] = nOp
-            nOps["originalValue"] = nOp
+        for (let dict of cellSettings) {
+            let cell = {}
+            for (let month in cellLaborDays) {
+                let customNOp = undefined
+                try {customNOp = montlynops[dict.CELULA][month]}
+                catch (error) {}
+                cell[month] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
+            }
+            nOps[dict.CELULA] = cell
         }
         setnOperarios(nOps)
     }
@@ -271,6 +301,7 @@ const CargasMaquinaWindow = () => {
         getCellsList().then(r => r)
         getmasterTable().then(r => r)
         getOrdersTable().then(r => r)
+        getMonthlyNOps().then(r => r)
         getCalendarData().then(r => r)
         getCellSettings().then(r => r)
     }, [])
@@ -372,13 +403,13 @@ const CargasMaquinaWindow = () => {
     // handler para cuando se cambia el numero de operarios en un mes especifico
     const handleNOperariosChanged = (newValue, changedMonth) => {
         let nOps = {...nOperarios}
-        for (let month in nOps) {
-            if (month === changedMonth) {
-                nOps[month] = newValue
-                break
-            }
-        }
+        let montlynops = {...montlyNOps}
+        nOps[selectedCell][changedMonth] = newValue
+        if (montlynops[selectedCell] === undefined) {montlynops[selectedCell] = {changedMonth: newValue}}
+        else {
+            montlynops[selectedCell][changedMonth] = newValue}
         setnOperarios(nOps)
+        setmonthlyNOps(montlynops)
     }
 
     // handler para productividad cambiada
@@ -454,6 +485,7 @@ const CargasMaquinaWindow = () => {
                         editedCell = dict.editedCell
                     }
                 }
+                if (editedCell) {productionPerc = 1}
                 let style = {background: editedCell ? "rgba(255,165,0,0.82)" : "none"}
                 let inputInfo = {fiscalMonth:month, reference: ref}
                 return (
@@ -552,7 +584,6 @@ const CargasMaquinaWindow = () => {
             },
             body: JSON.stringify(contentsDict)
         }
-        // TODO ARREGLAR QUE EL ARCHIVO NO SE ESTA DESCARGANDO CON EL NOMBRE ADECUADO
         fetch(`${flaskAddress}_export_simulation`, body)
             .then(res => res.blob())
             .then(blob => {
@@ -562,23 +593,220 @@ const CargasMaquinaWindow = () => {
             .then(r => setisButtonLoading(false))
     }
 
+    // abrir el popup
     const handleImportSimulation = () => {
         setshowPopUp(true)
     }
 
+    // cerrar el popup
     const closePopUp = () => {
         setshowPopUp(false)
     }
 
+    // aplicar tablas importadas a la carga de maquina
     const applySimulationData = (response) => {
+        // parse la tabla de nOperarios
+        response.nOperarios = response.nOperarios[0]
+        for (let cell in response.nOperarios) {
+            response.nOperarios[cell] = response.nOperarios[cell].replace(/'/g, '"')
+            response.nOperarios[cell] = JSON.parse(response.nOperarios[cell])
+        }
+        // aplicar tablas descargadas
         setmasterTable(response.masterTable)
         setordersTable(response.ordersTable)
         setnOperarios(response.nOperarios)
+        setmonthlyNOps(response.nOperarios)
         setcellSettings(response.cellSettings)
     }
 
+    //mostrar o ocultar el popup
+    const handleAddRef = () => {
+        setshowAddRefPopUp(!showAddRefPopUp)
+    }
+
+     // agregar referencias Seleccionadas a la tabla
+    const addRefs = (master) => {
+        setmasterTable(master)
+    }
+
+    // total de dias habiles en el mes
+    const totalLaborDays = () => {
+        let total = 0
+        for (let month in cellLaborDays) {
+            total = total + cellLaborDays[month]
+        }
+        return (
+            <th>{total}</th>
+        )
+    }
+
+    // total de hrs STD
+    const totalHRSSTD = () => {
+        let totalHrsSTD = 0
+        for (let value of Object.keys(cellLaborDays)) {
+            // obtener piezas producidas en el mes
+            let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+            for (let dict of ordersTable) {
+                if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                    let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                    totalHrsSTD += dict.Qty * hrsSTD / 100
+                }
+            }
+        }
+        return (
+            <th>{totalHrsSTD.toFixed(2)}</th>
+        )
+    }
+
+    // total de hrs nes STD
+    const totalHrsSTDNec = () => {
+        let totalHrsSTD = 0
+        for (let value of Object.keys(cellLaborDays)) {
+            // obtener piezas producidas en el mes
+            let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+            for (let dict of ordersTable) {
+                if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                    let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                    totalHrsSTD += dict.Qty * hrsSTD / 100
+                }
+            }
+            totalHrsSTD = totalHrsSTD / productividadCell
+        }
+        return (
+            <th>{totalHrsSTD.toFixed(2)}</th>
+        )
+    }
+
+    // total de hrs disponibles
+    const totalHrsDisp = () => {
+        let total = 0
+        for (let value of Object.keys(cellLaborDays)) {
+            // obtener piezas producidas en el mes
+            let laborDays = cellLaborDays[value]
+            let hrsDisponibles = (nOperarios[selectedCell][value]*laborDays*8)/(1+absentismoCell)
+            total = total + hrsDisponibles
+            }
+            return (
+                <th>{total.toFixed(2)}</th>
+            )
+        }
+
+    // total de NOp necesarios
+    const totalNOpNec = () => {
+        let totalHrsSTD = 0
+        let laborDays = 0
+        for (let value of Object.keys(cellLaborDays)) {
+            // obtener piezas producidas en el mes
+            laborDays = laborDays + cellLaborDays[value]
+            let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+            for (let dict of ordersTable) {
+                if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                    let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                    totalHrsSTD += dict.Qty * hrsSTD/100
+                }
+            }
+            totalHrsSTD = totalHrsSTD/productividadCell
+        }
+        let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-absentismoCell))
+        let style = {background: nroOpNecesarios > nOperarios[selectedCell].originalValue ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+        return (
+            <th style={style}>{nroOpNecesarios.toFixed(2)}</th>
+        )
+    }
+
+    // total produccion de piezas mensual
+    const totalRefsProdMonthly = () => {
+        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+        return (
+            monthsList.map((month, index) => {
+                let totalMonthQty = 0
+                for (let dict of cellMasterTable) {
+                    let ref = dict.ReferenciaSAP
+                    let productionPerc = masterTable.filter(dict=>dict.Celula.toString() === selectedCell.toString() && dict.ReferenciaSAP === ref)[0]
+                    if (productionPerc === undefined) {productionPerc = 0}
+                    else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
+                    let monthQty = 0
+                    let editedCell = false
+                    for (let dict of ordersTable) {
+                        if (dict.FiscalMonth === month && dict["Reference"] === ref) {
+                            monthQty += dict.Qty
+                            editedCell = dict.editedCell
+                        }
+                    }
+                    if (editedCell) {productionPerc = 1}
+                    totalMonthQty = totalMonthQty + monthQty*productionPerc
+                }
+                return (
+                    <th key={index}>{totalMonthQty}</th>
+                )
+                }))
+    }
+
+    // total produccion de piezas en el rango de tiempo
+    const totalRefsProd = () => {
+        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+        let totalQty = 0
+        // eslint-disable-next-line array-callback-return
+            monthsList.map((month, index) => {
+                for (let dict of cellMasterTable) {
+                    let ref = dict.ReferenciaSAP
+                    let productionPerc = masterTable.filter(dict=>dict.Celula.toString() === selectedCell.toString() && dict.ReferenciaSAP === ref)[0]
+                    if (productionPerc === undefined) {productionPerc = 0}
+                    else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
+                    let monthQty = 0
+                    let editedCell = false
+                    for (let dict of ordersTable) {
+                        if (dict.FiscalMonth === month && dict["Reference"] === ref) {
+                            monthQty += dict.Qty
+                            editedCell = dict.editedCell
+                        }
+                    }
+                    if (editedCell) {productionPerc = 1}
+                    totalQty = totalQty + monthQty*productionPerc
+                }
+            })
+        return (
+            <th>{totalQty}</th>
+        )
+    }
+
+    // total de piezas por dia en el rango de tiempo
+    const totalPartsPerDay = () => {
+        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+        let totalQty = 0
+        // eslint-disable-next-line array-callback-return
+        monthsList.map((month, index) => {
+            for (let dict of cellMasterTable) {
+                let ref = dict.ReferenciaSAP
+                let productionPerc = masterTable.filter(dict=>dict.Celula.toString() === selectedCell.toString() && dict.ReferenciaSAP === ref)[0]
+                if (productionPerc === undefined) {productionPerc = 0}
+                else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
+                let monthQty = 0
+                let editedCell = false
+                for (let dict of ordersTable) {
+                    if (dict.FiscalMonth === month && dict["Reference"] === ref) {
+                        monthQty += dict.Qty
+                        editedCell = dict.editedCell
+                    }
+                }
+                if (editedCell) {productionPerc = 1}
+                totalQty = totalQty + monthQty*productionPerc
+            }
+        })
+        let total = 0
+        for (let value of Object.keys(cellLaborDays)) {
+            // obtener piezas producidas en el mes
+            let laborDays = cellLaborDays[value]
+            let hrsDisponibles = (nOperarios[selectedCell][value]*laborDays*8)/(1+absentismoCell)
+            total = total + hrsDisponibles
+        }
+        return (
+            <th>{(totalQty/total).toFixed(2)}</th>
+        )
+    }
+
     // pantalla de carga
-    if (calendar.length* masterTable.length* cellsList.length* fiscalCal.length * ordersTable.length * cellSettings.length === 0) {
+    if (calendar.length* masterTable.length* cellsList.length* fiscalCal.length * ordersTable.length * cellSettings.length * Object.keys(nOperarios).length === 0) {
         return (
             <div>
                 <NavBar title={"Cargas de Maquina"}/>
@@ -589,6 +817,7 @@ const CargasMaquinaWindow = () => {
 
     return (
         <div>
+            <AddReferencePopUp show={showAddRefPopUp} close={handleAddRef} masterTable={masterTable} setmasterTable={addRefs} originalmasterTable={originalMasterTable} cell={selectedCell}/>
             <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
             <NavBar title={"Cargas de Maquina"}
                     handleSaveSimulation={handleSaveSimulation}
@@ -606,6 +835,7 @@ const CargasMaquinaWindow = () => {
                         placeholder={'Celula'}
                         value={selectedCell} onChange={(val) => {setselectedCell(val)}}/>
                     {cellSettingsInputs()}
+                    <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
                     <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
                 </div>
                 <Table striped bordered hover className={"production-table"} size={"sm"}>
@@ -648,6 +878,14 @@ const CargasMaquinaWindow = () => {
                             )
                         })}
                         <tr>
+                            <td></td>
+                            <th>TOTAL</th>
+                            {totalRefsProdMonthly()}
+                            {totalRefsProd()}
+                            {totalPartsPerDay()}
+                            {totalHRSSTD()}
+                        </tr>
+                        <tr>
                             <td colSpan={26} className={'production-table-separator'}></td>
                         </tr>
                         <tr>
@@ -658,7 +896,8 @@ const CargasMaquinaWindow = () => {
                                     <th>{value}</th>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            <th>TOTAL</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>DIAS HABILES</th>
@@ -667,7 +906,8 @@ const CargasMaquinaWindow = () => {
                                     <td key={index}>{cellLaborDays[value]}</td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            {totalLaborDays()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>HRS STD</th>
@@ -685,7 +925,8 @@ const CargasMaquinaWindow = () => {
                                     <td key={index}>{totalHrsSTD.toFixed(2)}</td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            {totalHRSSTD()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>HRS NEC. PEDIDOS</th>
@@ -704,7 +945,8 @@ const CargasMaquinaWindow = () => {
                                     <td key={index}>{totalHrsSTD.toFixed(2)}</td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            {totalHrsSTDNec()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>HRS DISPONIBLES</th>
@@ -719,28 +961,30 @@ const CargasMaquinaWindow = () => {
                                         totalHrsSTD += dict.Qty * hrsSTD/100
                                     }
                                 }
-                                let hrsDisponibles = (nOperarios[value]*laborDays*8)/(1+absentismoCell)
+                                let hrsDisponibles = (nOperarios[selectedCell][value]*laborDays*8)/(1+absentismoCell)
                                 return (
                                     <td key={index}>{hrsDisponibles.toFixed(2)}</td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            {totalHrsDisp()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Nº OP ACTUALES</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
-                                let style = {background: nOperarios[value] !== nOperarios.originalValue ? "rgba(255,165,0,0.82)" : "none"}
+                                let style = {background: nOperarios[selectedCell][value] !== nOperarios[selectedCell].originalValue ? "rgba(255,165,0,0.82)" : "none"}
                                 return (
                                     <td key={index} style={style}>
-                                        <input value={nOperarios[value]} className={'parts-produced-entry'} onChange={event => handleNOperariosChanged(event.target.value, value)}/>
-                                        {nOperarios[value] !== nOperarios.originalValue ?
-                                            <button id={value} onClick={event => handleNOperariosChanged(nOperarios.originalValue, event.target.id)} className={"restore-qty-value"}>
+                                        <input value={nOperarios[selectedCell][value]} className={'parts-produced-entry'} onChange={event => handleNOperariosChanged(event.target.value, value)}/>
+                                        {nOperarios[selectedCell][value] !== nOperarios[selectedCell].originalValue ?
+                                            <button id={value} onClick={event => handleNOperariosChanged(nOperarios[selectedCell].originalValue, event.target.id)} className={"restore-qty-value"}>
                                                 <BsArrowCounterclockwise id={value}/>
                                             </button> : null}
                                     </td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            <th>{nOperarios[selectedCell].originalValue}</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
                             <th colSpan={2}>Nº OP NECESARIOS</th>
@@ -757,12 +1001,13 @@ const CargasMaquinaWindow = () => {
                                 }
                                 totalHrsSTD = totalHrsSTD/productividadCell
                                 let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-absentismoCell))
-                                let style = {background: nroOpNecesarios > nOperarios[value] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                let style = {background: nroOpNecesarios > nOperarios[selectedCell][value] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
                                 return (
                                     <td key={index} style={style}>{nroOpNecesarios.toFixed(2)}</td>
                                 )
                             })}
-                            <td colSpan={5} className={"secondary-table-right-filler"}></td>
+                            {totalNOpNec()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                     </tbody>
                 </Table>
