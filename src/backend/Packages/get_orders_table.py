@@ -54,7 +54,7 @@ def get_orders_table() -> pd.DataFrame:
     df = df.append(df4, ignore_index=True)
 
     # Obtener datos de las celulas de Laura
-    query = open('sql/query_obtener_datos_de_laura.sql', 'r')
+    query = open(r'C:\Users\VJZP49U\Documents\JavaScriptProjects\cargas-maquina-jd\src\backend\Packages\sql\query_obtener_datos_de_laura.sql', 'r')
     df2 = pd.read_sql_query(query.read(), connection)
     df2 = df2.drop(columns=['Id', 'PlanificationId', 'Code', 'Date'])
     df2 = df2.loc[df2['Qty'] != 0]
@@ -94,6 +94,7 @@ def get_orders_table() -> pd.DataFrame:
     df: pd.DataFrame
     final_df = df.append(df3, ignore_index=True)
     final_df = final_df.groupby(['Fiscal Month', 'Reference']).sum().reset_index()
+    final_df = final_df[final_df["Fiscal Month"] != "N/A"]
     # Agregar columna de fechas en texto de mes fiscal
     final_df['Text Fiscal Month'] = final_df.apply(lambda row: get_text_fiscal_month(row['Fiscal Month']), axis=1)
     final_df: pd.DataFrame

@@ -9,6 +9,7 @@ import pandas as pd
 from Packages.constants import no_labor_days_folder, resources_folder
 from Packages.get_general_labor_days import get_general_labor_days, save_no_labor_days, get_cell_labor_days
 from Packages.get_master_table import get_master_table
+from Packages.get_orders_table import get_orders_table
 from Packages.save_master_table import save_master_table
 import warnings
 
@@ -142,6 +143,13 @@ def get_monthly_nops():
     with open(os.path.join(resources_folder, "nro_op_mensual.json")) as json_file:
         data = json.load(json_file)
         return flask.jsonify(data)
+
+
+@app.route("/_update_orders_table", methods=["GET"])
+def update_orders_table():
+    get_orders_table()
+    print("orders table updated succesfully")
+    return ""
 
 
 if __name__ == '__main__':
