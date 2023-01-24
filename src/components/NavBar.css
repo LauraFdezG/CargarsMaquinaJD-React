@@ -109,3 +109,8 @@
     align-items: center;
     column-gap: 10px;
 }
+
+.right-side-buttons-container {
+    display: flex;
+    gap: 20px;
+}

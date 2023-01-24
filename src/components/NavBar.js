@@ -1,7 +1,7 @@
 import {FaBars} from "react-icons/fa"
 import "./NavBar.css"
 import { useState} from "react";
-import {Button, ButtonGroup, Dropdown, Offcanvas} from "react-bootstrap";
+import {Button, ButtonGroup, Dropdown, Offcanvas, Spinner} from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
 import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
 import {MdAnalytics} from "react-icons/md"
@@ -54,19 +54,57 @@ const NavBar = (props) => {
         }
     }
 
+    // boton para actualizar tabla de pedidos
+    const updateOrdersTableButton = () => {
+        if (props.updateOrdersTable === undefined) {return }
+        if (props.ordersUpdating === true) {
+            return (
+                <Button disabled={true}>
+                    Actualizando Pedidos...
+                    <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                    />
+                </Button>
+            )
+        }
+        else {
+            return (
+                <Button onClick={props.updateOrdersTable}>Actualizar pedidos</Button>
+            )
+        }
+    }
+
     // boton de guardar simulacion de carga de maquina
     const saveCargaMaquinaSimulation = () => {
         if (props.title === "Cargas de Maquina") {
+            const downloadingSpinner = () => {
+                return (
+                    <>
+                        Descargando....
+                        <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                        />
+                    </>
+                )
+            }
             return (
                 <>
                 <Dropdown as={ButtonGroup} className={'save-button'}>
                     <Button variant="primary" onClick={props.handleSaveSimulation} disabled={!!props.isCargaMaquinaButtonLoading}>
-                        {props.isCargaMaquinaButtonLoading ? "Descargando...." : "Guardar Simulacion"}
+                        {props.isCargaMaquinaButtonLoading ? downloadingSpinner() : "Guardar Simulacion"}
                     </Button>
                     <Dropdown.Toggle split variant="primary" id="dropdown-split-basic" />
                     <Dropdown.Menu>
                         <Dropdown.Item disabled={!!props.isCargaMaquinaButtonLoading} onClick={props.handleImportSimulation}>
-                            {props.isCargaMaquinaButtonLoading ? "Descargando..." : "Importar Simulacion"}
+                            {props.isCargaMaquinaButtonLoading ? downloadingSpinner() : "Importar Simulacion"}
                         </Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
@@ -96,9 +134,12 @@ const NavBar = (props) => {
             <div className={'navbar'}>
                 <FaBars className={'bars'} onClick={handleClick}/>
                 <h4>{props.title}</h4>
-                {refSaveButton()}
-                {calendarViewModeButton()}
-                {saveCargaMaquinaSimulation()}
+                <div className={"right-side-buttons-container"}>
+                    {refSaveButton()}
+                    {calendarViewModeButton()}
+                    {updateOrdersTableButton()}
+                    {saveCargaMaquinaSimulation()}
+                </div>
             </div>
             <Offcanvas show={showSidebar} onHide={handleClose}>
                 <Offcanvas.Header closeButton closeVariant={'white'}>

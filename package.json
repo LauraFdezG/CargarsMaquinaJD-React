@@ -21,7 +21,8 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.7.0",
     "react-widgets": "^5.8.4",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "react-datepicker": "^4.8.0"
   },
   "main": "src/electron-starter.js",
   "browser": {

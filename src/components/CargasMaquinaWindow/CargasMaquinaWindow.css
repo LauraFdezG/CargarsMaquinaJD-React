@@ -45,7 +45,7 @@ td.secondary-table-right-filler {
 }
 
 input.cargas-maquina-settings-n-input {
-    border: #cccccc 1px solid;
+    border: #cccccc 1px solid !important;
     border-radius: 4px;
     box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
     height: 38px;
@@ -77,5 +77,20 @@ input.parts-produced-entry {
     /*height: 38px;*/
     padding: 8px;
     color: #000000;
+}
+
+.date-picker-filter-container {
+    display: flex;
+    gap: 10px;
+}
+
+.date-picker-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.date-picker-filter .rw-date-picker {
+    max-width: 125px !important;
 }
 

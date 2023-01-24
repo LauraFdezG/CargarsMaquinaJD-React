@@ -11,6 +11,7 @@ import { saveAs } from 'file-saver';
 import UploadFilePopUp from "./UploadFilePopUp";
 import {json, useNavigate} from "react-router-dom";
 import AddReferencePopUp from "./AddReferencePopUp";
+import DateFilter from "./DateFilter";
 
 const monthDictionary = {
     0:'Ene',
@@ -26,6 +27,12 @@ const monthDictionary = {
     10:'Nov',
     11:'Dic'
 }
+
+const monthDiff = (dateTo, dateFrom) => {
+    return dateTo.getMonth() - dateFrom.getMonth() +
+        (12 * (dateTo.getFullYear() - dateFrom.getFullYear()))
+}
+
 
 const CargasMaquinaWindow = () => {
     let navigate = useNavigate()
@@ -48,6 +55,11 @@ const CargasMaquinaWindow = () => {
     const [montlyNOps, setmonthlyNOps] = useState({})
     const [showAddRefPopUp, setshowAddRefPopUp] = useState(false)
     const [originalMasterTable, setoriginalMasterTable] = useState([])
+    const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
+    const [maxCalendarDate, setmaxCalendarDate] = useState(lastCalendarDate)
+    const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
+    const [minCalendarDate, setminCalendarDate] = useState(firstCalendarDate)
+    const [ordersUpdating, setordersUpdating] = useState(false)
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -111,8 +123,8 @@ const CargasMaquinaWindow = () => {
     const getCalendar = async () => {
         if (fiscalCal.length === 0) {return}
         // fechas de inicio y final
-        const today = new Date().addDays(-1).addMonth(1)
-        const lastDate = today.addYear(1).addMonth(6) // TODO CAMBIAR AQUI EL NUMERO DE MESES
+        const today = firstCalendarDate
+        const lastDate = lastCalendarDate
         let dateArray = []
         let currentDate = new Date(today.getFullYear(), today.getMonth(), 1)
         currentDate = fiscalCal.filter(dict=>dict.Date.getDate() === today.getDate() && dict.Date.getMonth() === today.getMonth() && dict.Date.getFullYear() === today.getFullYear())[0]
@@ -490,7 +502,7 @@ const CargasMaquinaWindow = () => {
                 let inputInfo = {fiscalMonth:month, reference: ref}
                 return (
                     <td key={index} style={style}>
-                        <input value={monthQty*productionPerc} onChange={handleQtyChanged} className={"parts-produced-entry"} id={JSON.stringify(inputInfo)}/>
+                        <input value={(monthQty*productionPerc).toFixed(0)} onChange={handleQtyChanged} className={"parts-produced-entry"} id={JSON.stringify(inputInfo)}/>
                         {editedCell ?
                         <button id={JSON.stringify(inputInfo)} onClick={restoreQtyValue} className={"restore-qty-value"}>
                             <BsArrowCounterclockwise id={JSON.stringify(inputInfo)}/>
@@ -737,7 +749,7 @@ const CargasMaquinaWindow = () => {
                     totalMonthQty = totalMonthQty + monthQty*productionPerc
                 }
                 return (
-                    <th key={index}>{totalMonthQty}</th>
+                    <th key={index}>{totalMonthQty.toFixed(0)}</th>
                 )
                 }))
     }
@@ -766,7 +778,7 @@ const CargasMaquinaWindow = () => {
                 }
             })
         return (
-            <th>{totalQty}</th>
+            <th>{totalQty.toFixed(0)}</th>
         )
     }
 
@@ -805,6 +817,44 @@ const CargasMaquinaWindow = () => {
         )
     }
 
+    // cambiar filtro de ultima fecha del calendario
+    const handleLastDayChanged = (date) => {
+        setlastCalendarDate(date)
+        getFiscalCal().then(r => r)
+        getCalendarData().then(r => r)
+        getMonthlyNOps().then(r => r)
+    }
+
+    // cambiar filtro de primera fecha del calendario
+    const handleFirstDayChanged = (date) => {
+        setfirstCalendarDate(date)
+        getFiscalCal().then(r => r)
+        getCalendarData().then(r => r)
+        getMonthlyNOps().then(r => r)
+    }
+
+    // actualizar tabla de pedidos
+    const updateOrders = () => {
+        setordersUpdating(true)
+        const msg = {
+            method:"GET",
+            headers: {
+                "Content-Type":"application/json"
+            }
+        }
+        fetch(`${flaskAddress}_update_orders_table`, msg)
+            .then(r => {
+                getOrdersTable().then(r=> {
+                    alert("Ordenes actualizadas exitosamente")
+                    setordersUpdating(false)
+                })
+            })
+            .catch(r => {
+                alert("Hubo un error al actualizar el pedido")
+                setordersUpdating(false)
+            })
+    }
+
     // pantalla de carga
     if (calendar.length* masterTable.length* cellsList.length* fiscalCal.length * ordersTable.length * cellSettings.length * Object.keys(nOperarios).length === 0) {
         return (
@@ -823,6 +873,8 @@ const CargasMaquinaWindow = () => {
                     handleSaveSimulation={handleSaveSimulation}
                     isCargaMaquinaButtonLoading={isButtonLoading}
                     handleImportSimulation={handleImportSimulation}
+                    updateOrdersTable={updateOrders}
+                    ordersUpdating={ordersUpdating}
             />
             <div className={"production-table-container"}>
                 <h5>Ajustes de celula</h5>
@@ -836,6 +888,7 @@ const CargasMaquinaWindow = () => {
                         value={selectedCell} onChange={(val) => {setselectedCell(val)}}/>
                     {cellSettingsInputs()}
                     <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
+                    <DateFilter initDate={minCalendarDate} lastDate={maxCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged}/>
                     <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
                 </div>
                 <Table striped bordered hover className={"production-table"} size={"sm"}>
@@ -843,14 +896,14 @@ const CargasMaquinaWindow = () => {
                         <tr style={{borderColor:"white"}}>
                             <th></th>
                             <th></th>
-                            <th colSpan={19}>
+                            <th colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+1}>
                                 <h2 className={'production-table-title'}>CARGAS DE MAQUINA EYE CELULA: {selectedCell}</h2>
                             </th>
                         </tr>
                         <tr style={{borderColor:"white"}}>
                             <th></th>
                             <th></th>
-                            <th colSpan={19} style={{background:"#e3e3e3", color:"black"}}>
+                            <th colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+1} style={{background:"#e3e3e3", color:"black"}}>
                                 <div className={"production-table-title"}>NUMERO DE PIEZAS</div>
                             </th>
                         </tr>

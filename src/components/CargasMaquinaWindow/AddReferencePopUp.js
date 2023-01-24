@@ -60,7 +60,7 @@ const AddReferencePopUp = (props) => {
             let newRef = {
                 Celula: props.cell,
                 CodMinif: dict.CodMinif,
-                HorasSTD: dict.HorasSTD,
+                HorasSTD: 0,
                 Minifabrica: dict.Minifabrica,
                 NombreEquipo: dict.NombreEquipo,
                 "Porcentaje de Pedidos": 1,
