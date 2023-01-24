@@ -1,4 +1,5 @@
 import ast
+import datetime
 import json
 import os
 import io
@@ -92,9 +93,12 @@ def _get_cells_list():
 @app.route("/_get_orders_table", methods=["GET"])
 def _get_orders_table():
     data = pd.read_excel(os.path.join(resources_folder, "orders_table.xlsx"))
+    created_time = os.path.getmtime(os.path.join(resources_folder, "orders_table.xlsx"))
+    created_time = datetime.datetime.fromtimestamp(created_time).strftime('%d/%m/%y %I:%M %p')
     df = pd.DataFrame(data)
     df = df.to_dict("records")
-    return flask.jsonify(df)
+    result = {"ordersTable": df, "createdTime": created_time}
+    return flask.jsonify(result)
 
 
 @app.route("/_get_fiscal_calendar", methods=["GET"])

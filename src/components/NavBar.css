@@ -114,3 +114,9 @@
     display: flex;
     gap: 20px;
 }
+
+.last-updated-text {
+    color: white;
+    display: flex;
+    align-items: center;
+}

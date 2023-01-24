@@ -73,7 +73,10 @@ const NavBar = (props) => {
         }
         else {
             return (
-                <Button onClick={props.updateOrdersTable}>Actualizar pedidos</Button>
+                <>
+                    <div className={"last-updated-text"}>Ultima actualizacion: {props.lastUpdate}</div>
+                    <Button onClick={props.updateOrdersTable}>Actualizar pedidos</Button>
+                </>
             )
         }
     }

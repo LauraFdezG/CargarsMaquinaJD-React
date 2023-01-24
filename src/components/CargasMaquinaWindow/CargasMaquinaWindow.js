@@ -60,6 +60,7 @@ const CargasMaquinaWindow = () => {
     const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
     const [minCalendarDate, setminCalendarDate] = useState(firstCalendarDate)
     const [ordersUpdating, setordersUpdating] = useState(false)
+    const [lastUpdatedTime, setlastUpdatedTime] = useState("")
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -204,7 +205,8 @@ const CargasMaquinaWindow = () => {
         fetch(`${flaskAddress}_get_orders_table`, msg)
             .then(response => response.json())
             .then(json => {
-                let orders = json
+                let orders = json.ordersTable
+                let time = json.createdTime
                 for (let dict of orders) {
                     let date = new Date(dict["Fiscal Month"])
                     dict.FiscalMonth = `${monthDictionary[date.getMonth()]}-${date.getFullYear()-2000}`
@@ -212,6 +214,7 @@ const CargasMaquinaWindow = () => {
                     dict.originalQty = dict.Qty
                 }
                 setordersTable(orders)
+                setlastUpdatedTime(time)
             })
     }
 
@@ -875,6 +878,7 @@ const CargasMaquinaWindow = () => {
                     handleImportSimulation={handleImportSimulation}
                     updateOrdersTable={updateOrders}
                     ordersUpdating={ordersUpdating}
+                    lastUpdate={lastUpdatedTime}
             />
             <div className={"production-table-container"}>
                 <h5>Ajustes de celula</h5>
