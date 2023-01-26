@@ -24,7 +24,7 @@ const DateFilter = (props) => {
                     value={startDate}
                     onChange={handleStarDateChanged}
                     min={props.initDate}
-                    max={props.lastDate.addDays(1)}
+                    max={props.maxDate.addDays(1)}
                     valueFormat={{ month: "numeric", year: "numeric" }}
                     calendarProps={{ views: ["year", "decade", "century"] }}
                 />
@@ -35,7 +35,7 @@ const DateFilter = (props) => {
                     value={lastDate}
                     onChange={handleLastDateChanged}
                     min={props.initDate}
-                    max={props.lastDate.addDays(1)}
+                    max={props.maxDate.addDays(1)}
                     valueFormat={{ month: "numeric", year: "numeric" }}
                     calendarProps={{ views: ["year", "decade", "century"] }}
                 />

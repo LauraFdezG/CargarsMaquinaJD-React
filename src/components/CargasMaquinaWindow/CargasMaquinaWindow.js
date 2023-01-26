@@ -55,8 +55,8 @@ const CargasMaquinaWindow = () => {
     const [montlyNOps, setmonthlyNOps] = useState({})
     const [showAddRefPopUp, setshowAddRefPopUp] = useState(false)
     const [originalMasterTable, setoriginalMasterTable] = useState([])
-    const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
-    const [maxCalendarDate, setmaxCalendarDate] = useState(lastCalendarDate)
+    const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(0))
+    const [maxCalendarDate, setmaxCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
     const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
     const [minCalendarDate, setminCalendarDate] = useState(firstCalendarDate)
     const [ordersUpdating, setordersUpdating] = useState(false)
@@ -808,15 +808,14 @@ const CargasMaquinaWindow = () => {
                 totalQty = totalQty + monthQty*productionPerc
             }
         })
-        let total = 0
+        let totalDays = 0
         for (let value of Object.keys(cellLaborDays)) {
             // obtener piezas producidas en el mes
             let laborDays = cellLaborDays[value]
-            let hrsDisponibles = (nOperarios[selectedCell][value]*laborDays*8)/(1+absentismoCell)
-            total = total + hrsDisponibles
+            totalDays = totalDays + laborDays
         }
         return (
-            <th>{(totalQty/total).toFixed(2)}</th>
+            <th>{(totalQty/totalDays).toFixed(2)}</th>
         )
     }
 
@@ -892,7 +891,7 @@ const CargasMaquinaWindow = () => {
                         value={selectedCell} onChange={(val) => {setselectedCell(val)}}/>
                     {cellSettingsInputs()}
                     <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
-                    <DateFilter initDate={minCalendarDate} lastDate={maxCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged}/>
+                    <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
                     <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
                 </div>
                 <Table striped bordered hover className={"production-table"} size={"sm"}>
