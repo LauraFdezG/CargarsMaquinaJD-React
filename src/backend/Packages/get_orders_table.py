@@ -69,7 +69,7 @@ def get_orders_table() -> pd.DataFrame:
     df_desgloses = pd.DataFrame(data3)  # ['Dpto', 'Minifabrica', 'Grupo', 'Caja', 'Ref', 'Uds']
     df['Grupo'] = np.NAN
 
-    # Eliminar las referencias de las cajas de desglose que ya estan en el df
+    # Eliminar las referencias de las cajas de desglose que ya estan en el df de sergio
     box_refs = df_desgloses['Ref'].to_list()
     for ref in set(box_refs):
         df = df[df['Reference'] != ref]
