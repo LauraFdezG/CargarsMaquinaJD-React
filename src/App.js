@@ -8,6 +8,8 @@ import DailyCalendarWindow from "./components/CalendarWindow/DailyCalendarWindow
 import MonthlyCalendarWindow from "./components/CalendarWindow/MonthlyCalendarWindow";
 import CargasMaquinaWindow from "./components/CargasMaquinaWindow/CargasMaquinaWindow";
 import ErrorWindow from "./components/CargasMaquinaWindow/ErrorWindow";
+import CellSettingsWindow from "./components/CellSettingsWindow/CellSettingsWindow";
+import DesglosesTableWindow from "./components/DesglosesTableWindow/DesglosesTableWindow";
 
 function App() {
     return (
@@ -19,6 +21,8 @@ function App() {
                 <Route path={"/monthly_calendar"} element={<MonthlyCalendarWindow/>}/>
                 <Route path={"/"} element={<CargasMaquinaWindow/>}/>
                 <Route path={"/error"} element={<ErrorWindow/>} />
+                <Route path={"/cell_settings"} element={<CellSettingsWindow/>}/>
+                <Route path={"/desgloses_settings"} element={<DesglosesTableWindow/>}/>
             </Routes>
         </BrowserRouter>
     )

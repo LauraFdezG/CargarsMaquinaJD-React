@@ -3,18 +3,6 @@ import { default as ReactSelect } from "react-select";
 import {useEffect, useState} from "react";
 import {components} from "react-select";
 
-const colourOptions = [
-    { value: "ocean1", label: "Ocean" },
-    { value: "blue", label: "Blue" },
-    { value: "purple", label: "Purple" },
-    { value: "red", label: "Red" },
-    { value: "orange", label: "Orange" },
-    { value: "yellow", label: "Yellow" },
-    { value: "green", label: "Green" },
-    { value: "forest", label: "Forest" },
-    { value: "slate", label: "Slate" },
-    { value: "silver", label: "Silver" }
-];
 
 const Option = (props) => {
     return (

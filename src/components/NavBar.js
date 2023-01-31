@@ -7,6 +7,8 @@ import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
 import {MdAnalytics} from "react-icons/md"
 import logo from "../resources/johnDeereLogo.png"
 import {SiJohndeere} from "react-icons/si"
+import {VscSettings} from "react-icons/vsc"
+import {RiInboxUnarchiveFill} from "react-icons/ri"
 
 const windowInfo = [
     {
@@ -23,7 +25,17 @@ const windowInfo = [
         title:'Calendario',
         path: "/calendar",
         icon: <AiFillCalendar className={"side-bar-icon"}/>
-    }
+    },
+    {
+        title: 'Ajustes de Celula',
+        path: "/cell_settings",
+        icon: <VscSettings className={'sidebar-icon'}/>
+    },
+    {
+        title: 'Ajustes de Desgloses',
+        path: "/desgloses_settings",
+        icon: <RiInboxUnarchiveFill className={'sidebar-icon'}/>
+    },
 ]
 
 const NavBar = (props) => {

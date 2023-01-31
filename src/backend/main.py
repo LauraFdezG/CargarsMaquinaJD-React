@@ -156,6 +156,33 @@ def update_orders_table():
     return ""
 
 
+@app.route("/_get_cell_op_types", methods=["GET"])
+def get_cell_op_types():
+    data = pd.read_excel(os.path.join(resources_folder, "tabla_celulas_operaciones.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.fillna("null")
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_desgloses_internos", methods=["GET"])
+def get_desgloses_internos():
+    data = pd.read_excel(os.path.join(resources_folder, "desglose_piezas_engranajes_internos.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.fillna("null")
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_desgloses_motor", methods=["GET"])
+def get_desgloses_motor():
+    data = pd.read_excel(os.path.join(resources_folder, "desglose_piezas_engranajes_motor.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.fillna("null")
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     app.run(debug=True, host="0.0.0.0")
