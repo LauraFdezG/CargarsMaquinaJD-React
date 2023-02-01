@@ -673,7 +673,7 @@ const CargasMaquinaWindow = () => {
         )
     }
 
-    // total de hrs nes STD
+    // total de hrs necesarias STD
     const totalHrsSTDNec = () => {
         let totalHrsSTD = 0
         for (let value of Object.keys(cellLaborDays)) {
@@ -685,8 +685,8 @@ const CargasMaquinaWindow = () => {
                     totalHrsSTD += dict.Qty * hrsSTD / 100
                 }
             }
-            totalHrsSTD = totalHrsSTD / productividadCell
         }
+        totalHrsSTD = totalHrsSTD / productividadCell
         return (
             <th>{totalHrsSTD.toFixed(2)}</th>
         )
