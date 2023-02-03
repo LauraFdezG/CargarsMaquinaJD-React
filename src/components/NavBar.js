@@ -66,6 +66,13 @@ const NavBar = (props) => {
         }
     }
 
+    const settingsButtons = () => {
+        if (props.settingsButtons === undefined) {return}
+        return (
+            props.settingsButtons
+        )
+    }
+
     // boton para actualizar tabla de pedidos
     const updateOrdersTableButton = () => {
         if (props.updateOrdersTable === undefined) {return }
@@ -154,6 +161,7 @@ const NavBar = (props) => {
                     {calendarViewModeButton()}
                     {updateOrdersTableButton()}
                     {saveCargaMaquinaSimulation()}
+                    {settingsButtons()}
                 </div>
             </div>
             <Offcanvas show={showSidebar} onHide={handleClose}>

@@ -3,7 +3,7 @@ import NavBar from "../NavBar";
 import LoadingWindow from "../LoadingWindow";
 import flaskAddress from "../Constants";
 import {useEffect, useState} from "react";
-import {Table} from "react-bootstrap";
+import {Button, Table} from "react-bootstrap";
 import Spreadsheet from "react-spreadsheet";
 import EditableSpreadSheet from "./EditableSpreadSheet";
 import {DropdownList} from "react-widgets/cjs";
@@ -88,48 +88,38 @@ const CellSettingsWindow = (props) => {
     const tableSelected = (value) => {
         setcurrentTable(tables[value])
     }
+     // handler para guardar los cambio realizados
+    const saveSettings = () => {
+        alert("hey!")
+    }
 
-    const tableHeaders = () => {
-        const headers = ["CELULA", "PRODUCTIVIDAD", "ABSENTISMO", "NUMERO DE OPERARIOS", "NUMERO DE TURNOS"]
+    // botones que iran en el navbar
+    const settingsButtons = () => {
         return (
-            headers.map(key => {
-                return (
-                    <th key={key}>{key}</th>
-                )
-            })
+            <div className={'cell-settings-container'}>
+                <DropdownList
+                    defaultValue={Object.keys(tables)[0]}
+                    data={Object.keys(tables)}
+                    onChange={tableSelected}
+                    className={'table-selector'}
+                />
+                <Button onClick={addRow}>Agregar Fila</Button>
+                <Button onClick={saveSettings}>Guardar Cambios</Button>
+            </div>
         )
     }
 
-    const tableData = () => {
-        return (
-            cellSettings.map((dict, key) => {
-                let absentismo = dict.ABSENTISMO
-                let cell = dict.CELULA
-                let NOp = dict.N_OPERARIOS
-                let NTurnos = dict.N_TURNOS
-                let prod = dict.PRODUCTIVIDAD
-                return (
-                    <tr key={key}>
-                        <td>
-                            <input value={cell} onChange={null}/>
-                        </td>
-                        <td>
-                            <input value={prod} onChange={null}/>
-                        </td>
-                        <td>
-                            <input value={absentismo} onChange={null}/>
-                        </td>
-                        <td>
-                            <input value={NOp} onChange={null}/>
-                        </td>
-                        <td>
-                            <input value={NTurnos} onChange={null}/>
-                        </td>
-                    </tr>
-                )
-            })
-        )
+    // agregar fila a la tabla de datos
+    const addRow = () => {
+        let table = [...currentTable]
+        let emptyRow = {}
+        for (let columnName in table[0]) {
+            emptyRow[columnName] = ""
+        }
+        table.unshift(emptyRow)
+        setcurrentTable(table)
     }
+
 
     if (cellSettings.length*cellOpTypes.length*desglosesMotor.length*desglosesInternos.length === 0) {
         return (
@@ -146,16 +136,18 @@ const CellSettingsWindow = (props) => {
         desglosesInternos: desglosesInternos
     }
     return (
-        <div>
-            <NavBar title={"Ajustes de Celula"}/>
-            <div className={'cell-settings-container'}>
-                <DropdownList
-                    defaultValue={Object.keys(tables)[0]}
-                    data={Object.keys(tables)}
-                    onChange={tableSelected}
-                />
-                <EditableSpreadSheet tableData={currentTable}/>
-            </div>
+        <div style={{marginTop: 54}}>
+            <NavBar title={"Ajustes de Celula"} settingsButtons={settingsButtons()}/>
+            {/*<div className={'cell-settings-container'}>*/}
+            {/*    <DropdownList*/}
+            {/*        defaultValue={Object.keys(tables)[0]}*/}
+            {/*        data={Object.keys(tables)}*/}
+            {/*        onChange={tableSelected}*/}
+            {/*        className={'table-selector'}*/}
+            {/*    />*/}
+            {/*    <Button>Guardar Cambios</Button>*/}
+            {/*</div>*/}
+            <EditableSpreadSheet tableData={currentTable}/>
         </div>
     )
 }

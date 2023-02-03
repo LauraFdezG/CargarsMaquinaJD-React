@@ -1,11 +1,31 @@
 import Spreadsheet from "react-spreadsheet";
 import {useEffect, useState} from "react";
 import {DropdownList} from "react-widgets/cjs";
-import {Table} from "react-bootstrap";
+import {Collapse, Fade, Table} from "react-bootstrap";
 import {json} from "react-router-dom";
 import DropdownMultiselect from "react-multiselect-dropdown-bootstrap";
 import {components} from "react-select";
 import { default as ReactSelect } from "react-select";
+
+
+const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
+
+// funcion para array de columnas por el siguiente orden de prioridad
+const sortByPreferredColumns = (array) => {
+    // minifabica -> grupos -> celulas -> cajas -> refeferencias
+    let preferences = {"minifabrica": 0, "grupos":1, "celulas":2, "cajas":3, "referencias":4}
+    let columnOrder = {}
+    for (let item of array) {
+        for (let key in preferences) {
+            if (key.toLowerCase().includes(item.toLowerCase().trim())) {
+                columnOrder[preferences[key]] = item
+            }
+        }
+    }
+    let result = Object.keys(columnOrder).map(key => columnOrder[key])
+    let missingItems = array.filter(item => result.includes(item) === false)
+    return result.concat(missingItems)
+}
 
 const Option = (props) => {
     return (
@@ -24,6 +44,7 @@ const Option = (props) => {
 
 const EditableSpreadSheet = (props) => {
     const [data, setData] = useState(props.tableData)
+    const [headers, setHeaders] = useState(Object.keys(props.tableData[0]))
     const [dataBackUp, setdataBackUp] = useState([])
     const [filteredColumns, setFilteredColumns] = useState({})
 
@@ -68,8 +89,10 @@ const EditableSpreadSheet = (props) => {
         )
     }
 
+    // cargar los datos dados al spreadsheet
     useEffect(() => {
         setData(props.tableData)
+        setHeaders(Object.keys(props.tableData[0]))
     }, [props.tableData])
 
     // handler de cambios de tabla
@@ -100,8 +123,10 @@ const EditableSpreadSheet = (props) => {
 
     // encabezados para la tabla
     const tableHeaders = () => {
+        let h = Object.keys(props.tableData[0])
+        h = sortByPreferredColumns(h)
         return (
-            Object.keys(props.tableData[0]).map((value, index) => {
+            h.map((value, index) => {
                 return (
                     <th key={index}>
                         {value}
@@ -117,10 +142,12 @@ const EditableSpreadSheet = (props) => {
         return (
             data.map((dict, index) => {
                 if (displayRow(dict) === false) {return }
+                let h = Object.keys(props.tableData[0])
+                h = sortByPreferredColumns(h)
                 return (
                     <tr key={index}>
                         <td>{index}</td>
-                        {Object.keys(props.tableData[0]).map((columnName, index2) => {
+                        {h.map((columnName, index2) => {
                             let rowData = {index: index, columnName: columnName}
                             return (
                                 <td key={index2}>
@@ -128,18 +155,36 @@ const EditableSpreadSheet = (props) => {
                                 </td>
                             )
                         })}
+                        <td>
+                            <button className={'delete-row-button'} id={index} onClick={deleteRow}>X</button>
+                        </td>
                     </tr>
                 )
             })
         )
     }
 
+    const deleteRow = (event) => {
+        let table = [...data]
+        table.splice(event.target.id, 1)
+        setData(table)
+    }
+
+
     if (data.length === 0) {return }
 
     return (
-        <div>
+        <div className={'animated-container'}>
             <Table striped hover bordered size={"sm"}>
                 <thead>
+                    <tr>
+                        <td></td>
+                        {Object.keys(props.tableData[0]).map((columnName, index) => {
+                            return (
+                                <td key={index}>{alphabet[index]}</td>
+                            )
+                        })}
+                    </tr>
                     <tr>
                         <th></th>
                         {tableHeaders()}
