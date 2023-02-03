@@ -31,11 +31,6 @@ const windowInfo = [
         path: "/cell_settings",
         icon: <VscSettings className={'sidebar-icon'}/>
     },
-    {
-        title: 'Ajustes de Desgloses',
-        path: "/desgloses_settings",
-        icon: <RiInboxUnarchiveFill className={'sidebar-icon'}/>
-    },
 ]
 
 const NavBar = (props) => {

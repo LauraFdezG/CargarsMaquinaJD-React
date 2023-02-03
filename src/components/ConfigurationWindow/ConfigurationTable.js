@@ -10,7 +10,6 @@ import flaskAddress from "../Constants";
 
 const ConfigurationTable = () => {
     const [masterTable, setmasterTable] = useState([])
-    const [masterDownloaded, setmasterDownloaded] = useState(false)
     const [references, setreferences] = useState([])
     const headers = ['Referencia', 'Tipo de Operacion', 'Celulas', 'Porcentaje de Pedidos']
     const [selectedRef, setselectedRef] = useState('Ver Todos')
@@ -30,7 +29,6 @@ const ConfigurationTable = () => {
                 // console.log(json)
                 console.log(json[0])
                 setmasterTable(json)
-                setmasterDownloaded(true)
             })
     }
 
@@ -77,7 +75,7 @@ const ConfigurationTable = () => {
         })
         setreferences(result)
         console.log(result)
-    }, [masterDownloaded, masterTable])
+    }, [masterTable])
 
     // obtener celulas para cada dropdown
     const getCells = (dict) => {
