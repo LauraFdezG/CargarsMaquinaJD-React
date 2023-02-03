@@ -6,6 +6,7 @@ import {json} from "react-router-dom";
 import DropdownMultiselect from "react-multiselect-dropdown-bootstrap";
 import {components} from "react-select";
 import { default as ReactSelect } from "react-select";
+import {motion, AnimatePresence} from "framer-motion";
 
 
 const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
@@ -127,8 +128,9 @@ const EditableSpreadSheet = (props) => {
         h = sortByPreferredColumns(h)
         return (
             h.map((value, index) => {
+                if (value === "id") return
                 return (
-                    <th key={index}>
+                <th key={index}>
                         {value}
                         {filterComponent(value)}
                     </th>
@@ -145,10 +147,18 @@ const EditableSpreadSheet = (props) => {
                 let h = Object.keys(props.tableData[0])
                 h = sortByPreferredColumns(h)
                 return (
-                    <tr key={index}>
+                    <motion.tr key={dict.id}
+                               initial={{ scale: 0 }}
+                               animate={{ scale: 1 }}
+                               transition={{duration: 0.2}}
+                               exit={{scale: 0}}
+                               layout
+                               layoutId={dict.id}
+                    >
                         <td>{index}</td>
                         {h.map((columnName, index2) => {
                             let rowData = {index: index, columnName: columnName}
+                            if (columnName === "id") return
                             return (
                                 <td key={index2}>
                                     <input value={dict[columnName]} className={'spreadsheet-input'} onChange={handleDataChanged} id={JSON.stringify(rowData)}/>
@@ -158,16 +168,14 @@ const EditableSpreadSheet = (props) => {
                         <td>
                             <button className={'delete-row-button'} id={index} onClick={deleteRow}>X</button>
                         </td>
-                    </tr>
+                    </motion.tr>
                 )
             })
         )
     }
 
     const deleteRow = (event) => {
-        let table = [...data]
-        table.splice(event.target.id, 1)
-        setData(table)
+        props.deleteRow(event)
     }
 
 
@@ -191,7 +199,9 @@ const EditableSpreadSheet = (props) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {tableBody()}
+                    <AnimatePresence>
+                        {tableBody()}
+                    </AnimatePresence>
                 </tbody>
             </Table>
         </div>

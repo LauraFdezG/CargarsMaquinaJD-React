@@ -183,6 +183,16 @@ def get_desgloses_motor():
     return flask.jsonify(df)
 
 
+@app.route("/save_settings", methods=["POST"])
+def save_settings():
+    req = request.json
+    data = req["data"]
+    filename = req["filename"]
+    df = pd.DataFrame.from_records(data)
+    df.to_excel(os.path.join(resources_folder, filename))
+    return ""
+
+
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     app.run(debug=True, host="0.0.0.0")

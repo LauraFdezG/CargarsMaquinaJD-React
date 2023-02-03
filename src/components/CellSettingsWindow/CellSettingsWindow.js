@@ -26,6 +26,10 @@ const CellSettingsWindow = (props) => {
         fetch(`${flaskAddress}_get_cell_settings`, msg)
             .then(response => response.json())
             .then(json => {
+                json.map((dict, index) => {
+                    dict.id = index
+                    return (dict)
+                })
                 setcellSettings(json)
                 setcurrentTable(json)
             })
@@ -42,6 +46,10 @@ const CellSettingsWindow = (props) => {
         fetch(`${flaskAddress}_get_cell_op_types`, msg)
             .then(response => response.json())
             .then(json => {
+                json.map((dict, index) => {
+                    dict.id = index
+                    return (dict)
+                })
                 setcellOpTypes(json)
             })
     }
@@ -57,6 +65,10 @@ const CellSettingsWindow = (props) => {
         fetch(`${flaskAddress}_get_desgloses_internos`, msg)
             .then(response => response.json())
             .then(json => {
+                json.map((dict, index) => {
+                    dict.id = index
+                    return (dict)
+                })
                 setDesglosesInternos(json)
             })
     }
@@ -72,6 +84,10 @@ const CellSettingsWindow = (props) => {
         fetch(`${flaskAddress}_get_desgloses_motor`, msg)
             .then(response => response.json())
             .then(json => {
+                json.map((dict, index) => {
+                    dict.id = index
+                    return (dict)
+                })
                 setDesglosesMotor(json)
             })
     }
@@ -90,7 +106,7 @@ const CellSettingsWindow = (props) => {
     }
      // handler para guardar los cambio realizados
     const saveSettings = () => {
-        alert("hey!")
+        alert("hey!") //TODO HACER QUE SE GUARDEN LOS AJUSTES
     }
 
     // botones que iran en el navbar
@@ -116,7 +132,15 @@ const CellSettingsWindow = (props) => {
         for (let columnName in table[0]) {
             emptyRow[columnName] = ""
         }
+        emptyRow.id = table.pop().id+1
         table.unshift(emptyRow)
+        setcurrentTable(table)
+    }
+
+    // eliminar fila de la tabla de datos
+    const deleteRow = (event) => {
+        let table = [...currentTable]
+        table.splice(event.target.id, 1)
         setcurrentTable(table)
     }
 
@@ -147,7 +171,7 @@ const CellSettingsWindow = (props) => {
             {/*    />*/}
             {/*    <Button>Guardar Cambios</Button>*/}
             {/*</div>*/}
-            <EditableSpreadSheet tableData={currentTable}/>
+            <EditableSpreadSheet tableData={currentTable} deleteRow={deleteRow}/>
         </div>
     )
 }
