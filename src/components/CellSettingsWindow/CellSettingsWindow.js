@@ -14,6 +14,7 @@ const CellSettingsWindow = (props) => {
     const [currentTable, setcurrentTable] = useState([])
     const [desglosesInternos, setDesglosesInternos] = useState([])
     const [desglosesMotor, setDesglosesMotor] = useState([])
+    const [currentFileName, setCurrentFileName] = useState("")
 
     // obtener tabla con ajustes de la celulas: productividad, absentismo, nro turnos etc
     const getCellSettings = async () => {
@@ -32,6 +33,7 @@ const CellSettingsWindow = (props) => {
                 })
                 setcellSettings(json)
                 setcurrentTable(json)
+                setCurrentFileName("ajustes_celula_cargas_de_maquina.xlsx")
             })
     }
 
@@ -102,11 +104,21 @@ const CellSettingsWindow = (props) => {
 
     // handler de cuando se selecciona una tabla nueva
     const tableSelected = (value) => {
-        setcurrentTable(tables[value])
+        setcurrentTable(tables[value].data)
+        setCurrentFileName(tables[value].fileName)
     }
+
      // handler para guardar los cambio realizados
     const saveSettings = () => {
-        alert("hey!") //TODO HACER QUE SE GUARDEN LOS AJUSTES
+        const msg = {
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify({filename: currentFileName, data: currentTable})
+        }
+        fetch(`${flaskAddress}save_settings`, msg)
+            .then(response => alert("Cambios guardados exitosamente"))
     }
 
     // botones que iran en el navbar
@@ -153,11 +165,11 @@ const CellSettingsWindow = (props) => {
             </div>
         )
     }
-    let tables = {
-        cellSettings: cellSettings,
-        cellOpTypes: cellOpTypes,
-        desglosesMotor: desglosesMotor,
-        desglosesInternos: desglosesInternos
+    const tables = {
+        cellSettings: {data: cellSettings, fileName:"ajustes_celula_cargas_de_maquina.xlsx"},
+        cellOpTypes: {data: cellOpTypes, fileName: "tabla_celulas_operaciones.xlsx"},
+        desglosesMotor: {data: desglosesMotor, fileName: "desglose_piezas_engranajes_motor.xlsx"},
+        desglosesInternos: {data: desglosesInternos, fileName: "desglose_piezas_engranajes_internos.xlsx"}
     }
     return (
         <div style={{marginTop: 54}}>

@@ -150,7 +150,7 @@ const EditableSpreadSheet = (props) => {
                     <motion.tr key={dict.id}
                                initial={{ scale: 0 }}
                                animate={{ scale: 1 }}
-                               transition={{duration: 0.2}}
+                               transition={{duration: 0.1}}
                                exit={{scale: 0}}
                                layout
                                layoutId={dict.id}

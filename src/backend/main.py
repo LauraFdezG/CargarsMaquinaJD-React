@@ -189,7 +189,8 @@ def save_settings():
     data = req["data"]
     filename = req["filename"]
     df = pd.DataFrame.from_records(data)
-    df.to_excel(os.path.join(resources_folder, filename))
+    df = df.drop(columns=["id"])
+    df.to_excel(os.path.join(resources_folder, filename), index=False)
     return ""
 
 
