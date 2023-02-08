@@ -45,7 +45,8 @@ const CargasMaquinaWindow = () => {
     const [ordersTable, setordersTable] = useState([])
     const [calendarData, setcalendarData] = useState([])
     const [cellsCalendarData, setcellsCalendarData] = useState([])
-    const [cellLaborDays, setcellLaborDays] = useState([])
+    const [cellLaborDays, setcellLaborDays] = useState({})
+    const [cellLaborDaysOriginal, setCellLaborDaysOriginal] = useState({})
     const [productividadCell, setproductividadCell] = useState(1.05)
     const [absentismoCell, setabsentismoCell] = useState(0.08)
     const [nOperarios, setnOperarios] = useState(4.2)
@@ -61,6 +62,7 @@ const CargasMaquinaWindow = () => {
     const [minCalendarDate, setminCalendarDate] = useState(firstCalendarDate)
     const [ordersUpdating, setordersUpdating] = useState(false)
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
+    const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -222,6 +224,7 @@ const CargasMaquinaWindow = () => {
     const getLaborDaysPerMonth = async () => {
         const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         let laborDays = {}
+        let originalLaborDays = {}
         // eslint-disable-next-line array-callback-return
         years.map(year=>{
             let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
@@ -252,10 +255,17 @@ const CargasMaquinaWindow = () => {
                     }
                 }
                 let fMonth = `${monthDictionary[month]}-${year-2000}`
-                laborDays[fMonth] = currentMonthCal.length - filteredMonthData.length
+                if (cellLaborDays[fMonth] === undefined) {
+                    laborDays[fMonth] = currentMonthCal.length - filteredMonthData.length
+                }
+                else {
+                    laborDays[fMonth] = cellLaborDays[fMonth]
+                }
+                originalLaborDays[fMonth] = currentMonthCal.length - filteredMonthData.length
             })
         })
         setcellLaborDays(laborDays)
+        setCellLaborDaysOriginal(originalLaborDays)
     }
 
     // obtener tabla con ajustes de la celulas: productividad, absentismo, nro turnos etc
@@ -334,7 +344,7 @@ const CargasMaquinaWindow = () => {
         setcellMasterTable(filteredTable)
         let settings = [...cellSettings]
         settings = settings.filter(dict => dict.CELULA.toString() === selectedCell.toString())[0]
-        setNOpDict(settings.N_OPERARIOS)
+        setNOpDict()
         setproductividadCell(settings.PRODUCTIVIDAD)
         setabsentismoCell(settings.ABSENTISMO)
     }, [masterTable, selectedCell, cellSettings])
@@ -342,7 +352,16 @@ const CargasMaquinaWindow = () => {
     // crear diccionario de dias laborales por mes para la celula
     useEffect(()=> {
         if (cellsCalendarData.length + calendarData.length === 0) {return}
-        getLaborDaysPerMonth().then(r => r)
+        getLaborDaysPerMonth().then(r => {
+            if (importedCellLaborDays.length === 0) return
+            let celCal = {...cellLaborDays}
+            for (let month in importedCellLaborDays) {
+                celCal[month] = importedCellLaborDays[month]
+            }
+            console.log(celCal)
+            setcellLaborDays(celCal)
+            setImportedCellLaborDays([])
+        })
     }, [selectedCell, calendarData, cellsCalendarData])
 
     //handler para cuando se edita una celula de cantidad
@@ -590,7 +609,9 @@ const CargasMaquinaWindow = () => {
             ordersTable: ordersTable,
             nOperarios: [nOperarios],
             masterTable: masterTable,
-            cellSettings: cellSettings
+            cellSettings: cellSettings,
+            selectedCell: [{selectedCell: selectedCell}],
+            cellLaborDays: [cellLaborDays]
         }
         const body = {
             method:"POST",
@@ -626,12 +647,24 @@ const CargasMaquinaWindow = () => {
             response.nOperarios[cell] = response.nOperarios[cell].replace(/'/g, '"')
             response.nOperarios[cell] = JSON.parse(response.nOperarios[cell])
         }
+        // ordenar el calendario importado con el orden apropiado
+        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+        let newCellCal = {}
+        for (let month of monthsList) {
+            if (response.cellLaborDays[0][month] === undefined) {
+                continue
+            }
+            newCellCal[month] = response.cellLaborDays[0][month]
+        }
+        setImportedCellLaborDays(newCellCal)
         // aplicar tablas descargadas
         setmasterTable(response.masterTable)
         setordersTable(response.ordersTable)
         setnOperarios(response.nOperarios)
         setmonthlyNOps(response.nOperarios)
         setcellSettings(response.cellSettings)
+        setselectedCell(response.selectedCell[0].selectedCell)
+        alert("Simulacion Importada correctamente")
     }
 
     //mostrar o ocultar el popup
@@ -648,7 +681,8 @@ const CargasMaquinaWindow = () => {
     const totalLaborDays = () => {
         let total = 0
         for (let month in cellLaborDays) {
-            total = total + cellLaborDays[month]
+            let value = parseInt(cellLaborDays[month])
+            total = total + value
         }
         return (
             <th>{total}</th>
@@ -717,11 +751,11 @@ const CargasMaquinaWindow = () => {
             for (let dict of ordersTable) {
                 if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
                     let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                    totalHrsSTD += dict.Qty * hrsSTD/100
+                    totalHrsSTD += (dict.Qty * hrsSTD)/100
                 }
             }
-            totalHrsSTD = totalHrsSTD/productividadCell
         }
+        totalHrsSTD = totalHrsSTD/productividadCell
         let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-absentismoCell))
         let style = {background: nroOpNecesarios > nOperarios[selectedCell].originalValue ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
         return (
@@ -833,6 +867,24 @@ const CargasMaquinaWindow = () => {
         getFiscalCal().then(r => r)
         getCalendarData().then(r => r)
         getMonthlyNOps().then(r => r)
+    }
+
+    // handler para cuando se cambia el numero de dias laborales
+    const handleCellCalendarChanged = (event) => {
+        let newDays = parseInt(event.target.value)
+        if (isNaN(newDays)) {newDays = 0}
+        const month = JSON.parse(event.target.id)
+        let cal = {...cellLaborDays}
+        cal[month] = newDays
+        setcellLaborDays(cal)
+    }
+
+    // restaurar valor original del numero de dias laborales
+    const restoreCellLaborDays = (event) => {
+        let month = JSON.parse(event.target.id)
+        let cal = {...cellLaborDays}
+        cal[month] = cellLaborDaysOriginal[month]
+        setcellLaborDays(cal)
     }
 
     // actualizar tabla de pedidos
@@ -958,8 +1010,16 @@ const CargasMaquinaWindow = () => {
                         <tr>
                             <th colSpan={2}>DIAS HABILES</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
+                                let editedCell = cellLaborDays[value] !== cellLaborDaysOriginal[value]
+                                let style = {background: editedCell ? "rgba(255,165,0,0.82)" : "none"}
                                 return (
-                                    <td key={index}>{cellLaborDays[value]}</td>
+                                    <td key={index} style={style}>
+                                        <input value={cellLaborDays[value]} className={'parts-produced-entry'} onChange={handleCellCalendarChanged} id={JSON.stringify(value)}/>
+                                        {editedCell ?
+                                            <button id={JSON.stringify(value)} onClick={restoreCellLaborDays} className={"restore-qty-value"}>
+                                                <BsArrowCounterclockwise id={JSON.stringify(value)}/>
+                                            </button> : null}
+                                    </td>
                                 )
                             })}
                             {totalLaborDays()}
