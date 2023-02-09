@@ -909,6 +909,12 @@ const CargasMaquinaWindow = () => {
             })
     }
 
+    // hanlder de cuando se selecciona la celula
+    const handleCellSelected = (val) => {
+        setselectedCell(val)
+        setcellLaborDays(cellLaborDaysOriginal)
+    }
+
     // pantalla de carga
     if (calendar.length* masterTable.length* cellsList.length* fiscalCal.length * ordersTable.length * cellSettings.length * Object.keys(nOperarios).length === 0) {
         return (
@@ -940,7 +946,7 @@ const CargasMaquinaWindow = () => {
                         defaultValue={selectedCell}
                         data={cellsList}
                         placeholder={'Celula'}
-                        value={selectedCell} onChange={(val) => {setselectedCell(val)}}/>
+                        value={selectedCell} onChange={handleCellSelected}/>
                     {cellSettingsInputs()}
                     <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
                     <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
