@@ -2,69 +2,36 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## Ejecutar la aplicacion de forma local
 
-In the project directory, you can run:
+Dentro del directorio de backend bastará con ejecutar el archivo *main.py* y dejarlo corriendo para que la aplicación funcione correctamente.
 
-### `npm start`
+Para ejecutar la aplicación, acceder al archivo *package.json* y en el apartado **scripts** clicar sobre start. Tambien se puede ejecutar el comando `npm start`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Se abrirá una página con la dirección [http://localhost:3000](http://localhost:3000) en el navegador.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+La página se recargará cuando se hagan cambios y los errores se pueden observar en la consola.
 
-### `npm test`
+## Desplegar la aplicacion en el servidor
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+La aplicación se lanzará en el servidor **fgetceapp13**. 
 
-### `npm run build`
+Empaquetar el código flask con pyinstaller `pyinstaller main.spec` en la terminal. Se genera un archivo ejecutable (`main.exe`).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Para poder lanzar la aplicación primero se debe realizar un build. En el  archivo *package.json* y en el apartado **scripts** clicar sobre ***build***. Tambien se puede ejecutar el comando `npm build`.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Se genera una carpeta `/build` que no será necesaria de subir al repositorio. 
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Dentro del servidor se copian los archivos `/build` y `main.exe` en la carpeta `/cargas-maquina-jd` dentro del disco ***DRIVE_C***. 
 
-### `npm run eject`
+En el servidor abrir la aplicación de Internet Information Services (IIS). En *Basic Settings* se puedeen ver los ajustes de la página.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+![img.png](img.png)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Si la página no está creada se creará una nueva indicando el nombre y el camino a la carpeta `/build`. El IP address ([http://172.27.0.71/](http://172.27.0.71/)) se elige sobre los que haya disponibles.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+![img_1.png](img_1.png)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Para poner en funcionamiento la aplicación con ejecutar el `main.exe` de pyinstaller. Solución temporal pasar a CGI.
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
