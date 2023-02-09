@@ -624,7 +624,7 @@ const CargasMaquinaWindow = () => {
             .then(res => res.blob())
             .then(blob => {
                 let FileSaver = require('file-saver');
-                FileSaver.saveAs(blob, "simulation.xlsx");
+                FileSaver.saveAs(blob, `simulation-${selectedCell}.xlsx`);
             })
             .then(r => setisButtonLoading(false))
     }
