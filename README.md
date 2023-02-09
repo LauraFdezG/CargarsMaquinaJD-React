@@ -28,7 +28,7 @@ En el servidor abrir la aplicación de Internet Information Services (IIS). En *
 
 ![img.png](img.png)
 
-Si la página no está creada se creará una nueva indicando el nombre y el camino a la carpeta `/build`. El IP address se elige sobre los que haya disponibles.
+Si la página no está creada se creará una nueva indicando el nombre y el camino a la carpeta `/build`. El IP address ([http://172.27.0.71/](http://172.27.0.71/)) se elige sobre los que haya disponibles.
 
 ![img_1.png](img_1.png)
 
