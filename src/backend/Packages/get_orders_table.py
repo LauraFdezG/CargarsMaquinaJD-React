@@ -54,7 +54,8 @@ def get_orders_table() -> pd.DataFrame:
     df = df.append(df4, ignore_index=True)
 
     # Obtener datos de las celulas de Laura
-    query = open(r'C:\Users\VJZP49U\Documents\JavaScriptProjects\cargas-maquina-jd\src\backend\Packages\sql\query_obtener_datos_de_laura.sql', 'r')
+    filepath = os.path.join(resources_folder, "sql\\query_obtener_datos_de_laura.sql")
+    query = open(filepath, 'r')
     df2 = pd.read_sql_query(query.read(), connection)
     df2 = df2.drop(columns=['Id', 'PlanificationId', 'Code', 'Date'])
     df2 = df2.loc[df2['Qty'] != 0]
@@ -139,3 +140,4 @@ if __name__ == '__main__':
     # 31-oct hasta el 27-nov
     dff = get_orders_table()
     print("orders updated")
+    print(dff)
