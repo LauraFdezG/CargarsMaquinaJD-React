@@ -929,7 +929,15 @@ const CargasMaquinaWindow = () => {
 
     return (
         <div>
-            <AddReferencePopUp show={showAddRefPopUp} close={handleAddRef} masterTable={masterTable} setmasterTable={addRefs} originalmasterTable={originalMasterTable} cell={selectedCell}/>
+            <AddReferencePopUp show={showAddRefPopUp}
+                               close={handleAddRef}
+                               masterTable={masterTable}
+                               setmasterTable={addRefs}
+                               originalmasterTable={originalMasterTable}
+                               cell={selectedCell}
+                               selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
+                               cellMasterTable={cellMasterTable}
+            />
             <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
             <NavBar title={"Cargas de Maquina"}
                     handleSaveSimulation={handleSaveSimulation}

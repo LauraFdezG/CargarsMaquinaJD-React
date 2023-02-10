@@ -20,7 +20,14 @@ const Option = (props) => {
 };
 
 const AddReferencePopUp = (props) => {
-    const [refsSelected, setrefsSelected] = useState([])
+    const initalRefs = props.selectedRefs.map((ref) => {
+        return (
+            {label: ref, value: ref}
+        )
+    })
+    let refsInOriginalMasterTable = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
+    refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
+    const [refsSelected, setrefsSelected] = useState(initalRefs)
     const [references, setreferences] = useState([])
 
     useEffect(()=>{
@@ -33,6 +40,7 @@ const AddReferencePopUp = (props) => {
         }
         setreferences(values)
     }, [])
+
 
     const addSelectedReferences = () => {
         let master = [...props.originalmasterTable]
@@ -57,8 +65,23 @@ const AddReferencePopUp = (props) => {
                 editedCell: dict.editedCell,
                 originalHrsSTD: dict.originalHrsSTD
             }
+            if (refsInOriginalMasterTable.includes(dict.ReferenciaSAP)) {
+                continue
+            }
+
             master.push(newRef)
         }
+        let selectedRefsList = refsSelected.map((dict) => dict.value)
+        let refsToDelete = refsInOriginalMasterTable.filter(ref => selectedRefsList.includes(ref) === false)
+        console.log(refsToDelete)
+        for (let ref of refsToDelete) {
+            for (let dict2 of master) {
+                if (dict2.Celula.toString() === props.cell && dict2.ReferenciaSAP === ref) {
+                    dict2.Celula = ""
+                }
+            }
+        }
+
         props.setmasterTable(master)
         props.close()
     }
