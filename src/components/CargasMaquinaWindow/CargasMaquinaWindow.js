@@ -554,8 +554,10 @@ const CargasMaquinaWindow = () => {
             totalLaborDays = totalLaborDays + cellLaborDays[month]
         })
         totalQty = totalQty*productionPerc
-        let maxTurno = (8*1.42/hrsSTD*100)
-        let avgTurno = (maxTurno*productividadCell)
+        let combinedCellsNumber = cellsList.filter((cell) => cell.slice(0,3) === selectedCell.slice(0,3))
+        combinedCellsNumber = combinedCellsNumber.length
+        let maxTurno = (8*1.42/hrsSTD*100)/combinedCellsNumber
+        let avgTurno = (maxTurno*productividadCell)/combinedCellsNumber
         return (
             <>
                 <td>{totalQty.toFixed(0)}</td>
