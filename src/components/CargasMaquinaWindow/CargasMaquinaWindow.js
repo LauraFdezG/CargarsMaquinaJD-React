@@ -557,7 +557,7 @@ const CargasMaquinaWindow = () => {
         let combinedCellsNumber = cellsList.filter((cell) => cell.slice(0,3) === selectedCell.slice(0,3))
         combinedCellsNumber = combinedCellsNumber.length
         let maxTurno = (8*1.42/hrsSTD*100)/combinedCellsNumber
-        let avgTurno = (maxTurno*productividadCell)/combinedCellsNumber
+        let avgTurno = (maxTurno*productividadCell)
         return (
             <>
                 <td>{totalQty.toFixed(0)}</td>
@@ -672,6 +672,8 @@ const CargasMaquinaWindow = () => {
     //mostrar o ocultar el popup
     const handleAddRef = () => {
         setshowAddRefPopUp(!showAddRefPopUp)
+        console.log("referencia SAP")
+        console.log(Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP))))
     }
 
      // agregar referencias Seleccionadas a la tabla
