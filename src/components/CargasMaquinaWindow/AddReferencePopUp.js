@@ -20,15 +20,15 @@ const Option = (props) => {
 };
 
 const AddReferencePopUp = (props) => {
-    const initalRefs = props.selectedRefs.map((ref) => {
-        return (
-            {label: ref, value: ref}
-        )
-    })
+    // const initialRefs = props.selectedRefs.map((ref) => {
+    //     return (
+    //         {label: ref, value: ref}
+    //     )
+    // })
 
     let refsInOriginalMasterTable = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
     refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
-    const [refsSelected, setrefsSelected] = useState(initalRefs)
+    const [refsSelected, setrefsSelected] = useState([])
     const [references, setreferences] = useState([])
     console.log("initial refs");
     console.log(refsSelected)
@@ -42,9 +42,20 @@ const AddReferencePopUp = (props) => {
             values.push({value: r, label: r})
         }
         setreferences(values)
-        console.log("refsuseeffect")
-        console.log(references)
-    }, [])
+
+
+    },[])
+
+    useEffect(()=>{
+        let selectedRefs = Array.from(new Set(props.cellMasterTable.map((dict) => dict.ReferenciaSAP)))
+        const initialRefs = selectedRefs.map((ref) => {
+            return (
+                {label: ref, value: ref}
+            )
+        })
+
+        setrefsSelected(initialRefs)
+    }, [props.cellMasterTable])
 
 
     const addSelectedReferences = () => {

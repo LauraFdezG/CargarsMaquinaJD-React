@@ -63,6 +63,7 @@ const CargasMaquinaWindow = () => {
     const [ordersUpdating, setordersUpdating] = useState(false)
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
+    const [selectedRefs, setSelectedRefs] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -672,8 +673,6 @@ const CargasMaquinaWindow = () => {
     //mostrar o ocultar el popup
     const handleAddRef = () => {
         setshowAddRefPopUp(!showAddRefPopUp)
-        console.log("referencia SAP")
-        console.log(Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP))))
     }
 
      // agregar referencias Seleccionadas a la tabla
@@ -937,7 +936,7 @@ const CargasMaquinaWindow = () => {
                                setmasterTable={addRefs}
                                originalmasterTable={originalMasterTable}
                                cell={selectedCell}
-                               selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
+                               //selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
                                cellMasterTable={cellMasterTable}
             />
             <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>

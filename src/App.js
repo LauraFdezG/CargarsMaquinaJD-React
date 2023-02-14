@@ -9,6 +9,7 @@ import MonthlyCalendarWindow from "./components/CalendarWindow/MonthlyCalendarWi
 import CargasMaquinaWindow from "./components/CargasMaquinaWindow/CargasMaquinaWindow";
 import ErrorWindow from "./components/CargasMaquinaWindow/ErrorWindow";
 import CellSettingsWindow from "./components/CellSettingsWindow/CellSettingsWindow";
+import ResumenCargaWindow from "./components/ResumenCargaWindow/ResumenCargaWindow";
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
                 <Route path={"/"} element={<CargasMaquinaWindow/>}/>
                 <Route path={"/error"} element={<ErrorWindow/>} />
                 <Route path={"/cell_settings"} element={<CellSettingsWindow/>}/>
+                <Route path={"/resumen_carga"} element={<ResumenCargaWindow/>}/>
             </Routes>
         </BrowserRouter>
     )

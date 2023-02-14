@@ -9,6 +9,7 @@ import logo from "../resources/johnDeereLogo.png"
 import {SiJohndeere} from "react-icons/si"
 import {VscSettings} from "react-icons/vsc"
 import {RiInboxUnarchiveFill} from "react-icons/ri"
+import { MdOutlineAutoGraph } from "react-icons/md";
 
 const windowInfo = [
     {
@@ -31,7 +32,13 @@ const windowInfo = [
         path: "/cell_settings",
         icon: <VscSettings className={'sidebar-icon'}/>
     },
+    {
+        title: 'Resumen de Carga',
+        path: "/resumen_carga",
+        icon: <MdOutlineAutoGraph className={'sidebar-icon'}/>
+    },
 ]
+
 
 const NavBar = (props) => {
     let navigate = useNavigate()
