@@ -30,8 +30,6 @@ const AddReferencePopUp = (props) => {
     refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
     const [refsSelected, setrefsSelected] = useState([])
     const [references, setreferences] = useState([])
-    console.log("initial refs");
-    console.log(refsSelected)
 
     useEffect(()=>{
         let values = []
@@ -65,10 +63,6 @@ const AddReferencePopUp = (props) => {
         for (let dict of refsSelected) {
             refs.push(dict.value)
         }
-        console.log("refs");
-        console.log(refs);
-        console.log("refsselected")
-        console.log(refsSelected);
         m = [...new Map(m.map(item =>
             [item["ReferenciaSAP"], item])).values()];
         m = m.filter(dict => refs.includes(dict.ReferenciaSAP))
@@ -112,7 +106,6 @@ const AddReferencePopUp = (props) => {
                 <Modal.Title>Agregar Referencias</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <h6>Agregar Referencias</h6>
                 <ReactSelect
                     options={references}
                     isMulti
