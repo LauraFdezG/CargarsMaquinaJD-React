@@ -53,8 +53,8 @@ const ResumenCargaWindow = () => {
     const [nOperarios, setnOperarios] = useState(4.2)
     const [ordersTable, setordersTable] = useState([])
     const [originalMasterTable, setoriginalMasterTable] = useState([])
-    const [selectedCells, setselectedCells] = useState(["147", "282"])
-    const [selectedFilters, setselectedFilters] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISPONIBLES', 'Nº OP ACTUALES', 'Nº OP NECESARIOS', 'TOTAL PIEZAS'])
+    const [selectedCells, setselectedCells] = useState(["147"])
+    const [selectedFilters, setselectedFilters] = useState(['TOTAL PIEZAS'])
     const [showAddCellPopUp, setshowAddCellPopUp] = useState(false)
     const [showAddFilterPopUp, setshowAddFilterPopUp] = useState(false)
 
@@ -211,8 +211,8 @@ const ResumenCargaWindow = () => {
             })
     }
 
-    // obetener dias laborales por cada mes del año
-    const getLaborDaysPerMonth = async (cell) => {
+    // obtener dias laborales de la celula por cada mes del año
+    const getCellLaborDaysPerMonth = (cell) => {
         const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         let laborDays = {}
         let originalLaborDays = {}
@@ -255,8 +255,7 @@ const ResumenCargaWindow = () => {
                 originalLaborDays[fMonth] = currentMonthCal.length - filteredMonthData.length
             })
         })
-        setcellLaborDays(laborDays)
-        setCellLaborDaysOriginal(originalLaborDays)
+        return laborDays
     }
 
     // descargar tabla de configuraciones
@@ -297,12 +296,12 @@ const ResumenCargaWindow = () => {
     }
 
     // crear diccionario de Nro de Operarios por mes
-    const setNOpDict = () => {
+    const setNOpDict = (laborDays) => {
         let montlynops = {...montlyNOps}
         let nOps = {}
         for (let dict of cellSettings) {
             let cell = {}
-            for (let month in cellLaborDays) {
+            for (let month in laborDays) {
                 let customNOp = undefined
                 try {customNOp = montlynops[dict.CELULA][month]}
                 catch (error) {}
@@ -311,7 +310,7 @@ const ResumenCargaWindow = () => {
             }
             nOps[dict.CELULA] = cell
         }
-        setnOperarios(nOps)
+        return nOps
     }
 
     // descargar configuraciones, celulas, tabla maestra, tabla de ordenes
@@ -322,6 +321,7 @@ const ResumenCargaWindow = () => {
         getMonthlyNOps().then(r => r)
         getFiscalCal().then(r => r)
         getCellSettings().then(r => r)
+        getCalendarData().then(r => r)
     },[])
 
     // crear calendario para el rango de fechas despues de descargar el fiscal
@@ -382,7 +382,7 @@ const ResumenCargaWindow = () => {
     }
 
     // fill the table
-    const fillRowTable = (filter, cell, cellTable,settings, cellLaborDays) => {
+    const fillRowTable = (filter, cell, cellTable,settings, cellLaborDays, nOps) => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
         return (
             monthsList.map((month, index) => {
@@ -414,47 +414,41 @@ const ResumenCargaWindow = () => {
                         <td key={index}>{totalHrsSTDNec.toFixed(2)}</td>
                     )
                 }
-                // if (filter === "HRS DISPONIBLES") {
-                //     // obtener piezas producidas en el mes
-                //     let laborDays = cellLaborDays[value]
-                //     let references = cellTable.map(dict => dict.ReferenciaSAP)
-                //     let totalHrsSTD = 0
-                //     for (let dict of ordersTable) {
-                //         if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
-                //             let hrsSTD = cellTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                //             totalHrsSTD += dict.Qty * hrsSTD/100
-                //         }
-                //     }
-                //     let hrsDisponibles = (nOperarios[cell][value]*laborDays*8)/(1+settings.ABSENTISMO)
-                //     return (
-                //         <td key={index}>{hrsDisponibles.toFixed(2)}</td>
-                //     )
-                // }
-                // if (filter === "Nº OP ACTUALES") {
-                //     return (
-                //         <td key={index}>
-                //             {nOperarios[cell][month]}
-                //         </td>
-                //     )
-                // }
-                // if (filter === "Nº OP NECESARIOS") {
-                //     // obtener piezas producidas en el mes
-                //     let laborDays = cellLaborDays[month]
-                //     let references = cellTable.map(dict => dict.ReferenciaSAP)
-                //     let totalHrsSTD = 0
-                //     for (let dict of ordersTable) {
-                //         if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
-                //             let hrsSTD = cellTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                //             totalHrsSTD += dict.Qty * hrsSTD/100
-                //         }
-                //     }
-                //     totalHrsSTD = totalHrsSTD/settings.PRODUCTIVIDAD
-                //     let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-settings.ABSENTISMO))
-                //     // let style = {background: nroOpNecesarios > nOperarios[cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
-                //     return (
-                //         <td key={index}>{nroOpNecesarios.toFixed(2)}</td>
-                //     )
-                // }
+                if (filter === "HRS DISPONIBLES") {
+                    // obtener horas disponibles al mes
+                    let laborDays = cellLaborDays[month]
+
+                    let hrsDisponibles = (nOps[cell][month]*laborDays*8)/(1+settings.ABSENTISMO)
+
+                    return (
+                        <td key={index}>{hrsDisponibles.toFixed(2)}</td>
+                    )
+                }
+                if (filter === "Nº OP ACTUALES") {
+                    return (
+                        <td key={index}>
+                            {nOps[cell][month]}
+                        </td>
+                    )
+                }
+                if (filter === "Nº OP NECESARIOS") {
+                    // obtener numero operarios necesarios
+                    let laborDays = cellLaborDays[month]
+                    let references = cellTable.map(dict => dict.ReferenciaSAP)
+                    let totalHrsSTD = 0
+                    for (let dict of ordersTable) {
+                        if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
+                            let hrsSTD = cellTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                            totalHrsSTD += dict.Qty * hrsSTD/100
+                        }
+                    }
+                    totalHrsSTD = totalHrsSTD/settings.PRODUCTIVIDAD
+                    let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-settings.ABSENTISMO))
+                    // let style = {background: nroOpNecesarios > nOperarios[cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                    return (
+                        <td key={index}>{nroOpNecesarios.toFixed(2)}</td>
+                    )
+                }
                 if (filter === "TOTAL PIEZAS") {
                     let totalMonthQty = 0
                     for (let dict of cellTable) {
@@ -482,7 +476,7 @@ const ResumenCargaWindow = () => {
 
     }
 
-    const totalColumns = (filter, cell, cellTable, settings) => {
+    const totalColumns = (filter, cell, cellTable, settings, cellLaborDays, nOps) => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
         if (filter === "HRS STD") {
             let totalHrsSTD = 0
@@ -517,30 +511,47 @@ const ResumenCargaWindow = () => {
                 <td key="totalhrsstdnec">{totalHrsSTDNecCol.toFixed(2)}</td>
             )
         }
-        // if (filter === "HRS DISPONIBLES") {
-        //     return (
-        //         <tr>
-        //             <td>{filter}</td>
-        //             {getHRSDIS()}
-        //         </tr>
-        //     )
-        // }
-        // if (filter === "Nº OP ACTUALES") {
-        //     return (
-        //         <tr>
-        //             <td>{filter}</td>
-        //             {getNOPACT()}
-        //         </tr>
-        //     )
-        // }
-        // if (filter === "Nº OP NECESARIOS") {
-        //     return (
-        //         <tr>
-        //             <td>{filter}</td>
-        //             {getNONEC()}
-        //         </tr>
-        //     )
-        // }
+        if (filter === "HRS DISPONIBLES") {
+            let totalHrsDis = 0
+            monthsList.map((month, index) => {
+                let laborDays = cellLaborDays[month]
+
+                let hrsDisponibles = (nOps[cell][month]*laborDays*8)/(1+settings.ABSENTISMO)
+                totalHrsDis += hrsDisponibles
+            })
+            return (
+                <td key="totalhrsdis">{totalHrsDis.toFixed(2)}</td>
+            )
+        }
+        if (filter === "Nº OP ACTUALES") {
+            let totalNOPAct= 0
+            monthsList.map((month, index) => {
+                totalNOPAct += nOps[cell][month]
+            })
+            return (
+                <td key="totalNOPAct">{totalNOPAct.toFixed(2)}</td>
+            )
+        }
+        if (filter === "Nº OP NECESARIOS") {
+            let totalNOpNec = 0
+            monthsList.map((month, index) => {
+                let laborDays = cellLaborDays[month]
+                let references = cellTable.map(dict => dict.ReferenciaSAP)
+                let totalHrsSTD = 0
+                for (let dict of ordersTable) {
+                    if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
+                        let hrsSTD = cellTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                        totalHrsSTD += dict.Qty * hrsSTD/100
+                    }
+                }
+                totalHrsSTD = totalHrsSTD/settings.PRODUCTIVIDAD
+                let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-settings.ABSENTISMO))
+                totalNOpNec += (nroOpNecesarios > 1000000 || isNaN(nroOpNecesarios)) ? 0 : nroOpNecesarios
+            })
+            return (
+                <td key="totalNOpNec">{totalNOpNec.toFixed(2)}</td>
+            )
+        }
         if (filter === "TOTAL PIEZAS") {
             const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
             let totalMonthQty = 0
@@ -620,12 +631,16 @@ const ResumenCargaWindow = () => {
                         </tr>
                     </thead>
                     <tbody>
+
                         {selectedCells.sort().map((cell, key)=>{
                             let table = [...masterTable]
                             let filteredTable = table.filter(dict=>dict.Celula.toString() === cell.toString())
                             const cellMasterTable = [...filteredTable]
                             let settings = [...cellSettings]
                             settings = settings.filter(dict => dict.CELULA.toString() === cell.toString())[0]
+
+                            let laborDays = getCellLaborDaysPerMonth(cell)
+                            let nOps = setNOpDict(laborDays)
 
                             return (
                                 <>
@@ -635,12 +650,12 @@ const ResumenCargaWindow = () => {
                                         </td>
                                         <td style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>TOTAL</td>
                                     </tr>
-                                    {selectedFilters.map((filter) => {
+                                    {selectedFilters.sort().map((filter) => {
                                         return(
                                             <tr>
                                                 <td>{filter}</td>
-                                                {fillRowTable(filter, cell, cellMasterTable, settings, cellLaborDays)}
-                                                {totalColumns(filter, cell, cellMasterTable, settings)}
+                                                {fillRowTable(filter, cell, cellMasterTable, settings, laborDays, nOps)}
+                                                {totalColumns(filter, cell, cellMasterTable, settings, laborDays, nOps)}
                                             </tr>
                                         )
 
