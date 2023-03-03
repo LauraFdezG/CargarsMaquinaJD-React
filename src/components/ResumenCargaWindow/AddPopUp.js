@@ -3,56 +3,59 @@ import {components} from "react-select";
 import {useEffect, useState} from "react";
 import {Button, Modal} from "react-bootstrap";
 
-
-
-const AddCellPopUp = (props) =>{
-    const [cellsList, setcellsList] = useState()
-    const [selectedCells, setselectedCells] = useState()
+const AddPopUp = (props) =>{
+    const [list, setlist] = useState()
+    const [selected, setselected] = useState()
 
     useEffect(() => {
-        const initialCells = props.cellsList.map((cell) => {
+        const initialList = props.inputList.map((filter) => {
             return (
-                {label: cell, value: cell}
+                {label: filter, value: filter}
             )
         })
 
-        const initialSelectedCells = props.selectedCells.map((cell) => {
+        const initialSelected = props.inputSelected.map((filter) => {
             return (
-                {label: cell, value: cell}
+                {label: filter, value: filter}
             )
         })
 
-        setcellsList(initialCells)
-        setselectedCells(initialSelectedCells)
+        setlist(initialList)
+        setselected(initialSelected)
 
     }, [])
 
-    const addSelectedCells = () => {
-        const selCells = selectedCells.map((cell) => cell.label)
+    const addSelected = () => {
+        const selectedItems = selected.map((filter) => filter.label)
 
-        props.addCells(selCells)
+        props.addItems(selectedItems)
         props.close()
     }
 
-    return(
+    const addAll = () => {
+        setselected(list)
+    }
+
+
+    return (
         <Modal show={props.show} onHide={props.close}>
             <Modal.Header closeButton>
-                <Modal.Title>Agregar Células</Modal.Title>
+                <Modal.Title>Agregar Filtro</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <ReactSelect
-                    options={cellsList}
+                    options={list}
                     isMulti
                     closeMenuOnSelect={false}
                     hideSelectedOptions={false}
-                    onChange={(selected) => setselectedCells(selected)}
+                    onChange={(selected) => setselected(selected)}
                     allowSelectAll={true}
-                    value={selectedCells}
+                    value={selected}
                     components={
                         <components.Option {...props}>
                             <input
                                 type="checkbox"
-                                checked={selectedCells}
+                                checked={selected}
                                 onChange={() => null}
                             />{" "}
                             <label>{props.label}</label>
@@ -61,7 +64,10 @@ const AddCellPopUp = (props) =>{
                 />
             </Modal.Body>
             <Modal.Footer>
-                <Button onClick={addSelectedCells}>
+                <Button onClick={addAll}>
+                    Agregar Todos
+                </Button>
+                <Button onClick={addSelected}>
                     Aceptar Cambios
                 </Button>
             </Modal.Footer>
@@ -69,4 +75,4 @@ const AddCellPopUp = (props) =>{
     )
 }
 
-export default AddCellPopUp
+export default AddPopUp

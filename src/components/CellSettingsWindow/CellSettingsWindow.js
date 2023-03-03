@@ -144,7 +144,8 @@ const CellSettingsWindow = (props) => {
         for (let columnName in table[0]) {
             emptyRow[columnName] = ""
         }
-        emptyRow.id = table.pop().id+1
+        emptyRow.id = table.length
+        console.log(emptyRow)
         table.unshift(emptyRow)
         setcurrentTable(table)
     }
