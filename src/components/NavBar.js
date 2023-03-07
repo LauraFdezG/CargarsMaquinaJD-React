@@ -135,6 +135,30 @@ const NavBar = (props) => {
                 </>
             )
         }
+        if (props.title === "Resumen de Cargas") {
+            const downloadingSpinner = () => {
+                return (
+                    <>
+                        Descargando....
+                        <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                        />
+                    </>
+                )
+            }
+            return (
+                <div style={{paddingRight: 20}}>
+                    <Button variant="primary" onClick={props.handleSaveSimulation} disabled={!!props.isCargaMaquinaButtonLoading}>
+                        {props.isCargaMaquinaButtonLoading ? downloadingSpinner() : "Guardar Resumen"}
+                    </Button>
+                </div>
+
+            )
+        }
     }
 
     // boton para cambiar el modo de visualizacion del calendario

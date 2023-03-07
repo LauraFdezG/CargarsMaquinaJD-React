@@ -5,9 +5,7 @@ import {useEffect, useState} from "react";
 import {eventTypesColors} from "../CalendarWindow/EventTypeColors";
 import {Table} from "react-bootstrap";
 import "./ResumenCargaWindow.css"
-import {useTime} from "framer-motion";
 import DateFilter from "../CargasMaquinaWindow/DateFilter";
-import {BsArrowCounterclockwise} from "react-icons/bs";
 import AddPopUp from "./AddPopUp";
 
 
@@ -42,6 +40,7 @@ const ResumenCargaWindow = () => {
     const [filterList, setfilterList] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISPONIBLES', 'Nº OP ACTUALES', 'Nº OP NECESARIOS', 'TOTAL PIEZAS'])
     const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
     const [fiscalCal, setfiscalCal] = useState([])
+    const [isButtonLoading, setisButtonLoading] = useState(false)
     const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(0))
     const [masterTable, setmasterTable] = useState([])
     const [maxCalendarDate, setmaxCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
@@ -329,6 +328,10 @@ const ResumenCargaWindow = () => {
         getCalendar().then(r => r)
     }, [fiscalCal])
 
+    // useEffect(()=> {
+    //     getData()
+    // }, [calendar, cellsList])
+
     // getdata for resumen
     const getData = () => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
@@ -349,11 +352,7 @@ const ResumenCargaWindow = () => {
 
                 let cellData = {}
 
-                if (cell !== "218"){
-                    console.log(cell)
-                    cellData["operation"] = cellMasterTable[0]["Tipo de Operacion"]
-
-                }
+                cellData["operation"] = cellMasterTable[0]["Tipo de Operacion"]
 
                 let totalCell = 0
 
@@ -493,6 +492,26 @@ const ResumenCargaWindow = () => {
         setshowAddOperationPopUp(!showAddOperationPopUp)
     }
 
+    // handler para descargar el resumen
+    const handleSaveResumen = () => {
+        setisButtonLoading(true)
+
+        const body = {
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json",
+            },
+            body: JSON.stringify(resumenData)
+        }
+        fetch(`${flaskAddress}_export_simulation`, body)
+            .then(res => res.blob())
+            .then(blob => {
+                let FileSaver = require('file-saver');
+                FileSaver.saveAs(blob, `resumen-carga.xlsx`);
+            })
+            .then(r => setisButtonLoading(false))
+    }
+
     // brings the changes for the selected cells from the popup
     const addCells = (selCells) => {
         setselectedCells(selCells)
@@ -537,9 +556,12 @@ const ResumenCargaWindow = () => {
                             <td>{filter}</td>
                             {monthsList.map((month) => {
                                 let totalMonth = 0
+                                // eslint-disable-next-line array-callback-return
                                 selectedCells.map((cell) => {
-                                    let dataM = parseFloat(resumenData[filter][cell][month])
-                                    totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                    if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])) {
+                                        let dataM = parseFloat(resumenData[filter][cell][month])
+                                        totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                    }
 
                                 })
                                 totalFinal += (isNaN(totalMonth) || totalMonth > 99999999) ? 0 : totalMonth
@@ -557,9 +579,12 @@ const ResumenCargaWindow = () => {
                             <td>{filter}</td>
                             {monthsList.map((month) => {
                                 let totalMonth = 0
+                                // eslint-disable-next-line array-callback-return
                                 selectedCells.map((cell) => {
-                                    let dataM = parseFloat(resumenData[filter][cell][month])
-                                    totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                    if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])) {
+                                        let dataM = parseFloat(resumenData[filter][cell][month])
+                                        totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                    }
 
                                 })
                                 totalFinal += (isNaN(totalMonth) || totalMonth > 99999999) ? 0 : totalMonth
@@ -589,6 +614,8 @@ const ResumenCargaWindow = () => {
     return(
         <div>
             <NavBar title={"Resumen de Cargas"}
+                    handleSaveSimulation={handleSaveResumen}
+                    isCargaMaquinaButtonLoading={isButtonLoading}
             />
             <div className={"resumen-tabla-container"}>
                 <h5>Ajustes de tabla</h5>
@@ -630,6 +657,7 @@ const ResumenCargaWindow = () => {
                     </tr>
                     </thead>
                     <tbody>
+                    {/* eslint-disable-next-line array-callback-return */}
                     {selectedCells.sort().map((cell, key) => {
                         if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])){
                             return (
@@ -646,9 +674,16 @@ const ResumenCargaWindow = () => {
                                                 <tr key={key+filter}>
                                                     <td>{filter}</td>
                                                     {monthsList.map((month, index) => {
-                                                        return (
-                                                            <td key={filter+month}>{resumenData[filter][cell][month]}</td>
-                                                        )
+                                                        if (filter === "Nº OP NECESARIOS"){
+                                                            let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACTUALES"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                                            return (
+                                                                <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
+                                                            )
+                                                        }else{
+                                                            return (
+                                                                <td key={filter+month}>{resumenData[filter][cell][month]}</td>
+                                                            )
+                                                        }
                                                     })}
                                                     <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
                                                 </tr>
@@ -658,31 +693,6 @@ const ResumenCargaWindow = () => {
                                 </>
                             )
                         }
-                        // return (
-                        //     <>
-                        //         <tr key={key}>
-                        //             <td style={{textAlign: "left", fontSize: "larger", background: "lightgray"}} colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
-                        //                 {cell}
-                        //             </td>
-                        //         </tr>
-                        //         {selectedFilters.map((filter) => {
-                        //             const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
-                        //             return(
-                        //                 <>
-                        //                     <tr key={key+filter}>
-                        //                         <td>{filter}</td>
-                        //                         {monthsList.map((month, index) => {
-                        //                             return (
-                        //                                 <td key={filter+month}>{resumenData[filter][cell][month]}</td>
-                        //                             )
-                        //                         })}
-                        //                         <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
-                        //                     </tr>
-                        //                 </>
-                        //             )
-                        //         })}
-                        //     </>
-                        // )
                     })}
                     <tr style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>
                         <td colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
