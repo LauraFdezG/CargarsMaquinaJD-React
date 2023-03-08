@@ -328,9 +328,9 @@ const ResumenCargaWindow = () => {
         getCalendar().then(r => r)
     }, [fiscalCal])
 
-    // useEffect(()=> {
-    //     getData()
-    // }, [calendar, cellsList])
+    useEffect(()=> {
+        getData()
+    }, [calendar, cellsList])
 
     // getdata for resumen
     const getData = () => {
@@ -503,7 +503,7 @@ const ResumenCargaWindow = () => {
             },
             body: JSON.stringify(resumenData)
         }
-        fetch(`${flaskAddress}_export_simulation`, body)
+        fetch(`${flaskAddress}_export_resumen`, body)
             .then(res => res.blob())
             .then(blob => {
                 let FileSaver = require('file-saver');
@@ -618,8 +618,7 @@ const ResumenCargaWindow = () => {
                     isCargaMaquinaButtonLoading={isButtonLoading}
             />
             <div className={"resumen-tabla-container"}>
-                <h5>Ajustes de tabla</h5>
-                <div className={"resumen-settings-container"}>
+                <div className={"resumen-settings-container"} style={{position: "fixed", backgroundColor: "white"}}>
                     <AddPopUp
                         show={showAddCellPopUp}
                         close={handleAddCell}
@@ -648,60 +647,64 @@ const ResumenCargaWindow = () => {
                     <button className={'resumen-settings-button'} onClick={getData}>Actualizar</button>
                 </div>
 
-                <Table striped bordered hover className={"resumen-tabla"} size={"sm"}>
-                    <thead>
-                    <tr>
-                        <th>Filtros</th>
-                        {productionMonthHeaders()}
-                        <th>Total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {/* eslint-disable-next-line array-callback-return */}
-                    {selectedCells.sort().map((cell, key) => {
-                        if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])){
-                            return (
-                                <>
-                                    <tr key={key}>
-                                        <td style={{textAlign: "left", fontSize: "larger", background: "lightgray"}} colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
-                                            {cell}
-                                        </td>
-                                    </tr>
-                                    {selectedFilters.map((filter) => {
-                                        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
-                                        return(
-                                            <>
-                                                <tr key={key+filter}>
-                                                    <td>{filter}</td>
-                                                    {monthsList.map((month, index) => {
-                                                        if (filter === "Nº OP NECESARIOS"){
-                                                            let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACTUALES"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
-                                                            return (
-                                                                <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
-                                                            )
-                                                        }else{
-                                                            return (
-                                                                <td key={filter+month}>{resumenData[filter][cell][month]}</td>
-                                                            )
-                                                        }
-                                                    })}
-                                                    <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
-                                                </tr>
-                                            </>
-                                        )
-                                    })}
-                                </>
-                            )
-                        }
-                    })}
-                    <tr style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>
-                        <td colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
-                            TOTALES
-                        </td>
-                    </tr>
-                    {totalRows()}
-                    </tbody>
-                </Table>
+                <div style={{marginTop:75}}>
+                    <Table striped bordered hover className={"resumen-table"} className={"fixed-header"} size={"sm"}>
+                        <thead>
+                        <tr>
+                            <th>Filtros</th>
+                            {productionMonthHeaders()}
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {/* eslint-disable-next-line array-callback-return */}
+                        {selectedCells.sort().map((cell, key) => {
+                            if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])){
+                                return (
+                                    <>
+                                        <tr key={key}>
+                                            <td style={{textAlign: "left", fontSize: "larger", background: "lightgray"}} colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
+                                                {cell}
+                                            </td>
+                                        </tr>
+                                        {selectedFilters.map((filter) => {
+                                            const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+                                            return(
+                                                <>
+                                                    <tr key={key+filter}>
+                                                        <td>{filter}</td>
+                                                        {monthsList.map((month, index) => {
+                                                            if (filter === "Nº OP NECESARIOS"){
+                                                                let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACTUALES"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                                                return (
+                                                                    <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
+                                                                )
+                                                            }else{
+                                                                return (
+                                                                    <td key={filter+month}>{resumenData[filter][cell][month]}</td>
+                                                                )
+                                                            }
+                                                        })}
+                                                        <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
+                                                    </tr>
+                                                </>
+                                            )
+                                        })}
+                                    </>
+                                )
+                            }
+                        })}
+                        <tr style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>
+                            <td colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
+                                TOTALES
+                            </td>
+                        </tr>
+                        {totalRows()}
+                        </tbody>
+                    </Table>
+                </div>
+
+
             </div>
         </div>
     )
