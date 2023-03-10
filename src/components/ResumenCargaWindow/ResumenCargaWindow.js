@@ -37,11 +37,12 @@ const ResumenCargaWindow = () => {
     const [cellLaborDays, setcellLaborDays] = useState({})
     const [cellsList, setcellsList] = useState([])
     const [cellSettings, setcellSettings] = useState([])
-    const [filterList, setfilterList] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISPONIBLES', 'Nº OP ACTUALES', 'Nº OP NECESARIOS', 'TOTAL PIEZAS'])
+    const [departmentList, setdepartmentList] = useState(["920", "924", "925"])
+    const [filterList, setfilterList] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP ACT', 'Nº OP NEC', 'TOTAL PIEZAS'])
     const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
     const [fiscalCal, setfiscalCal] = useState([])
     const [isButtonLoading, setisButtonLoading] = useState(false)
-    const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(0))
+    const [lastCalendarDate, setlastCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
     const [masterTable, setmasterTable] = useState([])
     const [maxCalendarDate, setmaxCalendarDate] = useState(new Date().addDays(-1).addMonth(1).addYear(1).addMonth(6))
     const [minCalendarDate, setminCalendarDate] = useState(firstCalendarDate)
@@ -51,11 +52,13 @@ const ResumenCargaWindow = () => {
     const [originalMasterTable, setoriginalMasterTable] = useState([])
     const [resumenData, setresumenData] = useState({})
     const [selectedCells, setselectedCells] = useState([])
-    const [selectedFilters, setselectedFilters] = useState(['TOTAL PIEZAS'])
+    const [selectedDepartments, setselectedDepartments] = useState(["920", "924", "925"])
+    const [selectedFilters, setselectedFilters] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP ACT', 'Nº OP NEC', 'TOTAL PIEZAS'])
     const [selectedOperations, setselectedOperations] = useState(["TT", "Shot P", "Rodar", "Induccion", "Prensa", "Brochar", "Mecanizado", "Rect Int", "Rect Dient", "Marcado", "Revenir"])
     const [showAddCellPopUp, setshowAddCellPopUp] = useState(false)
     const [showAddFilterPopUp, setshowAddFilterPopUp] = useState(false)
     const [showAddOperationPopUp, setshowAddOperationPopUp] = useState(false)
+    const [showAddDepartmentPopUp, setshowAddDepartmentPopUp] = useState(false)
 
     // obtener array de fechas entre los limites y la lista de celulas
     const getCalendar = async () => {
@@ -328,9 +331,9 @@ const ResumenCargaWindow = () => {
         getCalendar().then(r => r)
     }, [fiscalCal])
 
-    useEffect(()=> {
-        getData()
-    }, [calendar, cellsList])
+    // useEffect(()=> {
+    //     getData()
+    // }, [calendar, cellsList, masterTable])
 
     // getdata for resumen
     const getData = () => {
@@ -353,6 +356,7 @@ const ResumenCargaWindow = () => {
                 let cellData = {}
 
                 cellData["operation"] = cellMasterTable[0]["Tipo de Operacion"]
+                cellData["department"] = cellMasterTable[0]["Departamento"]
 
                 let totalCell = 0
 
@@ -389,7 +393,7 @@ const ResumenCargaWindow = () => {
 
                     }
 
-                    if (filter === "HRS DISPONIBLES") {
+                    if (filter === "HRS DISP") {
                         // obtener horas disponibles al mes
                         let laborDays = labDays[month]
 
@@ -399,13 +403,13 @@ const ResumenCargaWindow = () => {
                         cellData[month] = hrsDisponibles.toFixed(2)
                     }
 
-                    if (filter === "Nº OP ACTUALES") {
+                    if (filter === "Nº OP ACT") {
                         let operarios = nOps[cell][month]
                         totalCell += (isNaN(operarios) || operarios > 9999999999) ? 0 : operarios
                         cellData[month] = operarios.toFixed(2)
                     }
 
-                    if (filter === "Nº OP NECESARIOS") {
+                    if (filter === "Nº OP NEC") {
                         // obtener numero operarios necesarios
                         let laborDays = labDays[month]
                         let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
@@ -492,6 +496,11 @@ const ResumenCargaWindow = () => {
         setshowAddOperationPopUp(!showAddOperationPopUp)
     }
 
+    // helps the modal addDepartment to open and close
+    const handleAddDepartment = () => {
+        setshowAddDepartmentPopUp(!showAddDepartmentPopUp)
+    }
+
     // handler para descargar el resumen
     const handleSaveResumen = () => {
         setisButtonLoading(true)
@@ -527,6 +536,11 @@ const ResumenCargaWindow = () => {
         setselectedOperations(selOperations)
     }
 
+    // brings the changes for the selected filters from the popup
+    const addDepartments = (selDepartments) => {
+        setselectedDepartments(selDepartments)
+    }
+
     // headers de la tabla para los meses
     const productionMonthHeaders = () => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
@@ -559,8 +573,10 @@ const ResumenCargaWindow = () => {
                                 // eslint-disable-next-line array-callback-return
                                 selectedCells.map((cell) => {
                                     if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])) {
-                                        let dataM = parseFloat(resumenData[filter][cell][month])
-                                        totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                        if (selectedDepartments.includes(resumenData["HRS STD"][cell]["department"])){
+                                            let dataM = parseFloat(resumenData[filter][cell][month])
+                                            totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                        }
                                     }
 
                                 })
@@ -582,8 +598,10 @@ const ResumenCargaWindow = () => {
                                 // eslint-disable-next-line array-callback-return
                                 selectedCells.map((cell) => {
                                     if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])) {
-                                        let dataM = parseFloat(resumenData[filter][cell][month])
-                                        totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                        if (selectedDepartments.includes(resumenData["HRS STD"][cell]["department"])){
+                                            let dataM = parseFloat(resumenData[filter][cell][month])
+                                            totalMonth += (isNaN(dataM) || dataM > 99999999) ? 0 : dataM
+                                        }
                                     }
 
                                 })
@@ -620,6 +638,7 @@ const ResumenCargaWindow = () => {
             <div className={"resumen-tabla-container"}>
                 <div className={"resumen-settings-container"} style={{position: "fixed", backgroundColor: "white"}}>
                     <AddPopUp
+                        title={"Agregar Celulas"}
                         show={showAddCellPopUp}
                         close={handleAddCell}
                         inputList={cellsList}
@@ -628,6 +647,7 @@ const ResumenCargaWindow = () => {
                     />
                     <button className={'resumen-settings-button'} onClick={handleAddCell}>Agregar Célula(s)</button>
                     <AddPopUp
+                        title={"Agregar Filtros"}
                         show={showAddFilterPopUp}
                         close={handleAddFilter}
                         inputList={filterList}
@@ -636,6 +656,7 @@ const ResumenCargaWindow = () => {
                     />
                     <button className={'resumen-settings-button'} onClick={handleAddFilter}>Agregar Filtro(s)</button>
                     <AddPopUp
+                        title={"Agregar Operaciones"}
                         show={showAddOperationPopUp}
                         close={handleAddOperation}
                         inputList={operationList}
@@ -643,55 +664,66 @@ const ResumenCargaWindow = () => {
                         addItems={addOperations}
                     />
                     <button className={'resumen-settings-button'} onClick={handleAddOperation}>Agregar Operacion(es)</button>
-                    <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
+                    <AddPopUp
+                        title={"Agregar Departamentos"}
+                        show={showAddDepartmentPopUp}
+                        close={handleAddDepartment}
+                        inputList={departmentList}
+                        inputSelected={selectedDepartments}
+                        addItems={addDepartments}
+                    />
+                    <button className={'resumen-settings-button'} onClick={handleAddDepartment}>Agregar Departamento(s)</button>
+                    <DateFilter initDate={minCalendarDate} lastDate={maxCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
                     <button className={'resumen-settings-button'} onClick={getData}>Actualizar</button>
                 </div>
 
                 <div style={{marginTop:75}}>
-                    <Table striped bordered hover className={"resumen-table"} className={"fixed-header"} size={"sm"}>
+                    <Table striped bordered hover className={"resumen-table"} size={"sm"}>
                         <thead>
-                        <tr>
-                            <th>Filtros</th>
-                            {productionMonthHeaders()}
-                            <th>Total</th>
-                        </tr>
+                            <tr>
+                                <th>Filtros</th>
+                                {productionMonthHeaders()}
+                                <th>Total</th>
+                            </tr>
                         </thead>
                         <tbody>
                         {/* eslint-disable-next-line array-callback-return */}
                         {selectedCells.sort().map((cell, key) => {
                             if (selectedOperations.includes(resumenData["HRS STD"][cell]["operation"])){
-                                return (
-                                    <>
-                                        <tr key={key}>
-                                            <td style={{textAlign: "left", fontSize: "larger", background: "lightgray"}} colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
-                                                {cell}
-                                            </td>
-                                        </tr>
-                                        {selectedFilters.map((filter) => {
-                                            const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
-                                            return(
-                                                <>
-                                                    <tr key={key+filter}>
-                                                        <td>{filter}</td>
-                                                        {monthsList.map((month, index) => {
-                                                            if (filter === "Nº OP NECESARIOS"){
-                                                                let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACTUALES"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
-                                                                return (
-                                                                    <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
-                                                                )
-                                                            }else{
-                                                                return (
-                                                                    <td key={filter+month}>{resumenData[filter][cell][month]}</td>
-                                                                )
-                                                            }
-                                                        })}
-                                                        <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
-                                                    </tr>
-                                                </>
-                                            )
-                                        })}
-                                    </>
-                                )
+                                if (selectedDepartments.includes(resumenData["HRS STD"][cell]["department"])){
+                                    return (
+                                        <>
+                                            <tr key={key}>
+                                                <td style={{textAlign: "left", fontSize: "larger", background: "lightgray"}} colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
+                                                    {cell}
+                                                </td>
+                                            </tr>
+                                            {selectedFilters.map((filter) => {
+                                                const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+                                                return(
+                                                    <>
+                                                        <tr key={key+filter}>
+                                                            <td>{filter}</td>
+                                                            {monthsList.map((month, index) => {
+                                                                if (filter === "Nº OP NEC"){
+                                                                    let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACT"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                                                    return (
+                                                                        <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
+                                                                    )
+                                                                }else{
+                                                                    return (
+                                                                        <td key={filter+month}>{resumenData[filter][cell][month]}</td>
+                                                                    )
+                                                                }
+                                                            })}
+                                                            <td key={filter+"total"}>{resumenData[filter][cell]["total"]}</td>
+                                                        </tr>
+                                                    </>
+                                                )
+                                            })}
+                                        </>
+                                    )
+                                }
                             }
                         })}
                         <tr style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>

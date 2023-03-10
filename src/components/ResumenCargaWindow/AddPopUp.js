@@ -40,7 +40,7 @@ const AddPopUp = (props) =>{
     return (
         <Modal show={props.show} onHide={props.close}>
             <Modal.Header closeButton>
-                <Modal.Title>Agregar Filtro</Modal.Title>
+                <Modal.Title>{props.title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <ReactSelect

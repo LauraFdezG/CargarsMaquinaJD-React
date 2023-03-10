@@ -19,9 +19,33 @@
     padding-top: 10px;
 }
 
-.resumen-table {
-    font-size: 12px;
+.resumen-table tbody {
+    display: block;
 }
+
+.resumen-table thead {
+    display: block;
+}
+
+.resumen-table th {
+    width: 80px;
+}
+
+.resumen-table td {
+    width: 80px;
+}
+
+.resumen-table tbody {
+    overflow: auto;
+    height: 720px;
+}
+
+
+.resumen-table {
+    font-size: 17px;
+    width: 100%;
+}
+
 
 .resumen-settings-button {
     border: #cccccc 1px solid;

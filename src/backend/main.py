@@ -15,6 +15,7 @@ from Packages.save_master_table import save_master_table
 import warnings
 
 from Packages.send_excel_as_response import send_excel_as_response
+from Packages.send_excel_as_response import send_res_as_response
 
 app = Flask(__name__)
 CORS(app)
@@ -140,6 +141,25 @@ def import_simulation():
         df = df.fillna("null")
         response[sheet_name] = df.to_dict("records")
     return flask.jsonify(response)
+
+
+@app.route("/_export_resumen", methods=["POST"])
+def export_resumen():
+    content_dict = getPOST()
+
+    col_names = ['Metrica', 'Celula', 'Operacion', 'Departamento', 'Mes', 'Valor']
+
+    df = pd.DataFrame(columns=col_names)
+
+    for metric in content_dict:
+        for cell in content_dict[metric]:
+            for month in content_dict[metric][cell]:
+                if month != "total" and month != "operation" and month != "department":
+                    df.loc[-1] = [metric, cell, content_dict[metric][cell]['operation'], content_dict[metric][cell]['department'], month, content_dict[metric][cell][month]]
+                    df.index = df.index + 1
+                    df = df.sort_index()
+
+    return send_res_as_response(df, filename="simulation")
 
 
 @app.route("/_get_monthly_nops", methods=["GET"])
