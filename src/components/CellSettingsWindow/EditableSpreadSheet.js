@@ -25,7 +25,19 @@ const sortByPreferredColumns = (array) => {
     }
     let result = Object.keys(columnOrder).map(key => columnOrder[key])
     let missingItems = array.filter(item => result.includes(item) === false)
-    return result.concat(missingItems)
+    if (missingItems.includes("ACTIVA")){
+        for (let header of missingItems) {
+            if (header !== "ACTIVA") {
+                result.push(header)
+            }
+        }
+        result.push("ACTIVA")
+    }
+    else {
+        result = result.concat(missingItems)
+    }
+
+    return result
 }
 
 const Option = (props) => {

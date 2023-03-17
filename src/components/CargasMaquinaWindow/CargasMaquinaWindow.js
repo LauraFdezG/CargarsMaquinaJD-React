@@ -63,7 +63,6 @@ const CargasMaquinaWindow = () => {
     const [ordersUpdating, setordersUpdating] = useState(false)
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
-    const [selectedRefs, setSelectedRefs] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {

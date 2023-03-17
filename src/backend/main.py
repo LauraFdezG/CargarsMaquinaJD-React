@@ -39,7 +39,6 @@ def _get_master_table():
     resp = flask.jsonify(data)
     return resp
 
-
 @app.route("/_save_master_table", methods=['POST'])
 def _save_master_table():
     data = request.data
