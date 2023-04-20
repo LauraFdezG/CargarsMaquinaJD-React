@@ -10,6 +10,10 @@ import CargasMaquinaWindow from "./components/CargasMaquinaWindow/CargasMaquinaW
 import ErrorWindow from "./components/CargasMaquinaWindow/ErrorWindow";
 import CellSettingsWindow from "./components/CellSettingsWindow/CellSettingsWindow";
 import ResumenCargaWindow from "./components/ResumenCargaWindow/ResumenCargaWindow";
+import RoleWindow from "./components/RoleWindow/RoleWindow";
+import ResumenParadasWindow from "./components/CalendarWindow/ResumenParadasWindow";
+import InicioSesionWindow from "./components/InicioSesionWindow/InicioSesionWindow";
+import HrsWindow from "./components/ConfigurationWindow/HrsWindow";
 
 function App() {
     return (
@@ -18,11 +22,15 @@ function App() {
                 <Route exact path="/reference_settings" element={<ConfigurationTable/>}/>
                 <Route path={"/calendar"} element={<CalendarWindow/>}/>
                 <Route path={"/daily_calendar"} element={<DailyCalendarWindow/>}/>
+                <Route path={"/resumen_paradas"} element={<ResumenParadasWindow/>}/>
                 <Route path={"/monthly_calendar"} element={<MonthlyCalendarWindow/>}/>
-                <Route path={"/"} element={<CargasMaquinaWindow/>}/>
+                <Route path={"/cargas_maquina"} element={<CargasMaquinaWindow/>}/>
+                <Route path={"/hrs_std"} element={<HrsWindow/>}/>
+                <Route path={"/"} element={<InicioSesionWindow/>}/>
                 <Route path={"/error"} element={<ErrorWindow/>} />
                 <Route path={"/cell_settings"} element={<CellSettingsWindow/>}/>
                 <Route path={"/resumen_carga"} element={<ResumenCargaWindow/>}/>
+                <Route path={"/roles"} element={<RoleWindow/>}/>
             </Routes>
         </BrowserRouter>
     )
