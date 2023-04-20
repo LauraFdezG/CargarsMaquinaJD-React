@@ -9,6 +9,7 @@ import datetime as dt
 import json
 
 from Packages.constants import no_labor_days_folder
+# from constants import no_labor_days_folder
 
 
 def get_default_labor_days_calendar():
@@ -144,9 +145,10 @@ def get_general_labor_days() -> list:
         for index in saved_calendar.index:
             name = saved_calendar["name"][index]
             date = saved_calendar["startDate"][index]
+            description = saved_calendar["description"][index]
             # filtered_cal = list(filter(lambda d: (d["name"] == name) & (d["startDate"] == date), no_labor_days_cal))
             if name not in ("Fin de Semana", "Fin mes fiscal"):
-                data = {'name': name, 'startDate': date, 'endDate': date, 'color': ''}
+                data = {'name': name, 'startDate': date, 'endDate': date, 'color': '', 'description': description}
                 no_labor_days_cal.append(data)
     except FileNotFoundError:
         pass
