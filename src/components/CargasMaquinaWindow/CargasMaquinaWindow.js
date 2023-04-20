@@ -12,6 +12,7 @@ import UploadFilePopUp from "./UploadFilePopUp";
 import {json, useNavigate} from "react-router-dom";
 import AddReferencePopUp from "./AddReferencePopUp";
 import DateFilter from "./DateFilter";
+import ErrorWindow from "../ErrorWindow/ErrorWindow"
 
 const monthDictionary = {
     0:'Ene',
@@ -63,6 +64,7 @@ const CargasMaquinaWindow = () => {
     const [ordersUpdating, setordersUpdating] = useState(false)
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
+    const [HRSSTDExcel, setHRSSTDExcel] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -320,6 +322,25 @@ const CargasMaquinaWindow = () => {
         setnOperarios(nOps)
     }
 
+    // obtener tabla con hrs
+    const getHrsTable = async () => {
+        const msg = {
+            method:"GET",
+            headers: {
+                "Content-Type":"application/json"
+            }
+        }
+        fetch(`${flaskAddress}_get_hrs_table`, msg)
+            .then(response => response.json())
+            .then(json => {
+                json.map((dict, index) => {
+                    dict.id = index
+                    return (dict)
+                })
+                setHRSSTDExcel(json)
+            })
+    }
+
     // descargar configuraciones, celulas, tabla maestra, tabla de ordenes
     useEffect(()=> {
         getFiscalCal().then(r => r)
@@ -329,6 +350,7 @@ const CargasMaquinaWindow = () => {
         getMonthlyNOps().then(r => r)
         getCalendarData().then(r => r)
         getCellSettings().then(r => r)
+        getHrsTable().then(r => r)
     }, [])
 
     // crear calendario para el rango de fechas despues de descargar el fiscal
@@ -341,7 +363,26 @@ const CargasMaquinaWindow = () => {
         if (masterTable.length * cellSettings.length === 0) {return}
         let table = [...masterTable]
         let filteredTable = table.filter(dict=>dict.Celula.toString() === selectedCell.toString())
-        setcellMasterTable(filteredTable)
+
+        let copyFilteredTable = [...filteredTable]
+
+        if (HRSSTDExcel.length > 0) {
+            for (let dictSTD of HRSSTDExcel) {
+                for (let dictFilt of copyFilteredTable) {
+                    if (String(dictSTD.reference) === String(dictFilt.ReferenciaSAP) &&  String(dictSTD.cell) === String(dictFilt.Celula).slice(0,3) && dictSTD.hrs !== dictFilt.originalHrsSTD) {
+                        dictFilt.HorasSTD = dictSTD.hrs
+                        dictFilt.originalHrsSTD = dictSTD.hrs
+                        dictFilt.ExternalHRSSTD = true
+                    }
+                    else {
+                        dictFilt.ExternalHRSSTD = false
+                    }
+                }
+            }
+        }
+
+
+        setcellMasterTable(copyFilteredTable)
         let settings = [...cellSettings]
         settings = settings.filter(dict => dict.CELULA.toString() === selectedCell.toString())[0]
         setNOpDict()
@@ -423,6 +464,7 @@ const CargasMaquinaWindow = () => {
         console.log(qty[-1])
         if (qty[qty.length-1] !== ".") {qty = parseFloat(qty)}
         if (isNaN(qty)) {qty = 0}
+
         for (let dict of mTable) {
             if (dict.Celula.toString() === cellInfo.Celula.toString() && dict.ReferenciaSAP === cellInfo.ReferenciaSAP) {
                 dict.HorasSTD = qty
@@ -431,6 +473,7 @@ const CargasMaquinaWindow = () => {
                 break
             }
         }
+
         setmasterTable(mTable)
     }
 
@@ -554,7 +597,7 @@ const CargasMaquinaWindow = () => {
             totalLaborDays = totalLaborDays + cellLaborDays[month]
         })
         totalQty = totalQty*productionPerc
-        let combinedCellsNumber = cellsList.filter((cell) => cell.slice(0,3) === selectedCell.slice(0,3))
+        let combinedCellsNumber = cellsList.filter((cell) => cell.slice(0,3) === String(selectedCell).slice(0,3))
         combinedCellsNumber = combinedCellsNumber.length
         let maxTurno = (8*1.42/hrsSTD*100)/combinedCellsNumber
         let avgTurno = (maxTurno*productividadCell)
@@ -602,6 +645,24 @@ const CargasMaquinaWindow = () => {
             }
         }
         setcellSettings(settings)
+
+        let orders = [...ordersTable]
+        for (let dict of ordersTable) {
+            dict.Qty = dict.originalQty
+            dict.editedCell = false
+        }
+        setordersTable(orders)
+
+        let mTable = [...masterTable]
+
+        for (let dict of mTable) {
+            dict.HorasSTD = dict.originalHrsSTD
+            dict.editedCell = false
+        }
+        setmasterTable(mTable)
+
+        let cal = {...cellLaborDaysOriginal}
+        setcellLaborDays(cal)
     }
 
     // handler para descargar la simulacion realizada
@@ -861,6 +922,7 @@ const CargasMaquinaWindow = () => {
         getFiscalCal().then(r => r)
         getCalendarData().then(r => r)
         getMonthlyNOps().then(r => r)
+
     }
 
     // cambiar filtro de primera fecha del calendario
@@ -915,6 +977,12 @@ const CargasMaquinaWindow = () => {
     const handleCellSelected = (val) => {
         setselectedCell(val)
         setcellLaborDays(cellLaborDaysOriginal)
+    }
+
+    if (sessionStorage.getItem("user") === "Desautorizado") {
+        return (
+            <ErrorWindow/>
+        )
     }
 
     // pantalla de carga
@@ -986,11 +1054,11 @@ const CargasMaquinaWindow = () => {
                         {cellMasterTable.map((dict, key)=>{
                             return (
                                 <tr key={key}>
-                                    <td>
+                                    <td style={{color: dict.ExternalHRSSTD ? "red" : "black"}}>
                                         {dict.ReferenciaSAP}
                                     </td>
                                     <td style={{background: dict.editedCell ? "rgba(255,165,0,0.82)" : "none"}}>
-                                        <input value={dict.HorasSTD} className={"parts-produced-entry"} id={JSON.stringify(dict)} onChange={handleHorasSTDChanged}/>
+                                        <input  value={dict.HorasSTD} className={"parts-produced-entry"} id={JSON.stringify(dict)} onChange={handleHorasSTDChanged}/>
                                         {dict.editedCell ?
                                             <button id={JSON.stringify(dict)} onClick={restoreHorasSTD} className={"restore-qty-value"}>
                                                 <BsArrowCounterclockwise id={JSON.stringify(dict)}/>

@@ -6,6 +6,8 @@ import "./ConfigurationWindow.css"
 import {DropdownList} from "react-widgets/cjs";
 import LoadingWindow from "../LoadingWindow";
 import flaskAddress from "../Constants";
+import ErrorWindow from "../ErrorWindow/ErrorWindow";
+import UploadFilePopUp from "../CargasMaquinaWindow/UploadFilePopUp";
 
 
 const ConfigurationTable = () => {
@@ -15,6 +17,8 @@ const ConfigurationTable = () => {
     const [selectedRef, setselectedRef] = useState('Ver Todos')
     const [selectedCell, setselectedCell] = useState('Ver Todos')
     const [selectedOpType, setselectedOpType] = useState('Ver Todos')
+    const [showPopUp, setshowPopUp] = useState(false)
+
 
     const getmasterTable = async () => {
         const body = {
@@ -27,7 +31,7 @@ const ConfigurationTable = () => {
             .then(response => response.json())
             .then(json => {
                 // console.log(json)
-                console.log(json[0])
+                // console.log(json)
                 setmasterTable(json)
             })
     }
@@ -73,8 +77,9 @@ const ConfigurationTable = () => {
                 }
             }
         })
-        setreferences(result)
         console.log(result)
+        setreferences(result)
+        // console.log(result)
     }, [masterTable])
 
     // obtener celulas para cada dropdown
@@ -204,18 +209,69 @@ const ConfigurationTable = () => {
         return result
     }
 
+    const handleSaveSimulation = () => {
+        const contentsDict = {
+            masterTable: masterTable
+        }
+        const body = {
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json",
+            },
+            body: JSON.stringify(contentsDict)
+        }
+        fetch(`${flaskAddress}_export_simulation`, body)
+            .then(res => res.blob())
+            .then(blob => {
+                let FileSaver = require('file-saver');
+                FileSaver.saveAs(blob, `ajustes_referencia.xlsx`);
+            })
+
+    }
+
+    // abrir el popup
+    const handleImportSimulation = () => {
+        setshowPopUp(true)
+    }
+
+    // cerrar el popup
+    const closePopUp = () => {
+        setshowPopUp(false)
+    }
+
+    // aplicar tablas importadas a los ajustes de referencia
+    const applySimulationData = (response) => {
+        // aplicar tablas descargadas
+        setmasterTable(response.masterTable)
+        alert("Ajustes Importados correctamente")
+    }
+
+    if (sessionStorage.getItem("user") !== "Administrador" && sessionStorage.getItem("user") !== "Manager") {
+        return (
+            <ErrorWindow/>
+        )
+    }
+
     // mostar pantalla de loading mientras se obtienen los datos
     if (masterTable.length === 0) {
         return (
             <>
-                <NavBar />
+                <NavBar title={"Ajustes de Referencia"} currentConfiguration={'/reference_settings'}/>
                 <LoadingWindow/>
             </>
-        )}
+        )
+    }
 
     return (
         <>
-            <NavBar handleSaveRefTable={saveChanges} title={'Ajustes de Referencia'}/>
+            <NavBar
+                handleSaveRefTable={saveChanges}
+                title={'Ajustes de Referencia'}
+                currentConfiguration={'/reference_settings'}
+                exportSettings={handleSaveSimulation}
+                importSettings={handleImportSimulation}
+            />
+            <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
             <div className={"config-table"}>
                 <Table striped bordered hover responsive>
                     <thead>

@@ -7,6 +7,7 @@ import {Table} from "react-bootstrap";
 import "./ResumenCargaWindow.css"
 import DateFilter from "../CargasMaquinaWindow/DateFilter";
 import AddPopUp from "./AddPopUp";
+import ErrorWindow from "../ErrorWindow/ErrorWindow";
 
 
 
@@ -625,6 +626,12 @@ const ResumenCargaWindow = () => {
             })
         )
 
+    }
+
+    if (sessionStorage.getItem("user") === "Desautorizado") {
+        return (
+            <ErrorWindow/>
+        )
     }
 
     if (masterTable.length * cellsList.length === 0) {

@@ -14,7 +14,7 @@ const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 // funcion para array de columnas por el siguiente orden de prioridad
 const sortByPreferredColumns = (array) => {
     // minifabica -> grupos -> celulas -> cajas -> refeferencias
-    let preferences = {"minifabrica": 0, "grupos":1, "celulas":2, "cajas":3, "referencias":4}
+    let preferences = {"Usuario": 0, "Rol":1, "minifabrica": 2, "grupos":3, "celulas":4, "cajas":5, "referencias":6, "Departamento":7, "Operacion":8}
     let columnOrder = {}
     for (let item of array) {
         for (let key in preferences) {
@@ -211,9 +211,9 @@ const EditableSpreadSheet = (props) => {
                     </tr>
                 </thead>
                 <tbody>
-                    <AnimatePresence>
+
                         {tableBody()}
-                    </AnimatePresence>
+
                 </tbody>
             </Table>
         </div>

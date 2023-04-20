@@ -1,0 +1,24 @@
+.resumen-table th {
+    width: 250px;
+}
+
+.resumen-table td {
+    width: 250px;
+}
+
+.resumen-table tbody {
+    overflow: auto;
+    height: 720px;
+}
+
+
+.resumen-table {
+    font-size: 17px;
+    width: 100%;
+}
+
+.resumen-tabla-container {
+    margin-top: 54px;
+    padding: 50px;
+    padding-top: 10px;
+}

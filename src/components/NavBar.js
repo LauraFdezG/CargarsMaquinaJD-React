@@ -9,12 +9,12 @@ import logo from "../resources/johnDeereLogo.png"
 import {SiJohndeere} from "react-icons/si"
 import {VscSettings} from "react-icons/vsc"
 import {RiInboxUnarchiveFill} from "react-icons/ri"
-import { MdOutlineAutoGraph } from "react-icons/md";
+import { MdOutlineAutoGraph, MdPersonOutline } from "react-icons/md";
 
 const windowInfo = [
     {
         title:"Cargas de Maquina",
-        path: "/",
+        path: "/cargas_maquina",
         icon: <MdAnalytics className={'side-bar-icon'}/>
     },
     {
@@ -36,6 +36,11 @@ const windowInfo = [
         title: 'Resumen de Carga',
         path: "/resumen_carga",
         icon: <MdOutlineAutoGraph className={'sidebar-icon'}/>
+    },
+    {
+        title: 'Roles',
+        path: "/roles",
+        icon: <MdPersonOutline className={'sidebar-icon'}/>
     },
 ]
 
@@ -60,8 +65,8 @@ const NavBar = (props) => {
                     <Button variant="primary" onClick={props.handleSaveRefTable}>Guardar cambios</Button>
                     <Dropdown.Toggle split variant="primary" id="dropdown-split-basic" />
                     <Dropdown.Menu>
-                        <Dropdown.Item>Exportar Ajustes</Dropdown.Item>
-                        <Dropdown.Item>Importar Ajustes</Dropdown.Item>
+                        <Dropdown.Item onClick={props.exportSettings}>Exportar Ajustes</Dropdown.Item>
+                        <Dropdown.Item onClick={props.importSettings}>Importar Ajustes</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
             )
@@ -172,6 +177,21 @@ const NavBar = (props) => {
                 <option value="/calendar">General</option>
                 <option value="/monthly_calendar">Mensual por Celula</option>
                 <option value="/daily_calendar">Diario por Celula</option>
+                <option value="/resumen_paradas">Resumen Paradas</option>
+            </select>
+        )
+    }
+
+    // boton para cambiar el modo de visualizacion del calendario
+    const configurationClicked = () => {
+        const handleConfigurationClicked = (event) => {
+            navigate(event.target.value)
+        }
+        if (props.title !== 'Ajustes de Referencia') {return}
+        return(
+            <select className={'view-mode-picker'} onChange={handleConfigurationClicked} value={props.currentConfiguration}>
+                <option value="/reference_settings">General</option>
+                <option value="/hrs_std">Horas STD</option>
             </select>
         )
     }
@@ -182,9 +202,11 @@ const NavBar = (props) => {
             <div className={'navbar'}>
                 <FaBars className={'bars'} onClick={handleClick}/>
                 <h4>{props.title}</h4>
+
                 <div className={"right-side-buttons-container"}>
                     {refSaveButton()}
                     {calendarViewModeButton()}
+                    {configurationClicked()}
                     {updateOrdersTableButton()}
                     {saveCargaMaquinaSimulation()}
                     {settingsButtons()}

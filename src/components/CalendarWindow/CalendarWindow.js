@@ -9,6 +9,7 @@ import flaskAddress from "../Constants";
 import createEventTypesColors, {eventTypesColors} from "./EventTypeColors";
 import {Col, Container, Row} from "react-bootstrap";
 import {BsFillSquareFill} from "react-icons/bs"
+import ErrorWindow from "../ErrorWindow/ErrorWindow";
 
 const CalendarWindow = () => {
     const [calendarViewMode, setcalendarViewMode] = useState('general')
@@ -45,6 +46,7 @@ const CalendarWindow = () => {
     // hacer que aparezca el popup
     const handleShow = (event) => {
         setdateSelected(event.date)
+        console.log(calendarData)
         if (event.events.length > 0) {
             setShow(true)
             seteventsSelected(event.events)
@@ -56,14 +58,31 @@ const CalendarWindow = () => {
     }
 
     // guardar los eventos nuevos
-    const handleSave = (eventType) => (event) => {
+    const handleSave = (eventType, description, finalDate) => (event) => {
         let cal = [...calendarData]
-        const data = {
-            name: eventType,
-            startDate: dateSelected,
-            endDate: dateSelected,
-            color: eventTypesColors[eventType]
+
+
+
+        let data = {}
+        if (eventType === "Parada Programada") {
+            data = {
+                name: eventType,
+                startDate: dateSelected,
+                endDate: finalDate,
+                color: eventTypesColors[eventType],
+                description: description
+            }
         }
+        else {
+            data = {
+                name: eventType,
+                startDate: dateSelected,
+                endDate: finalDate,
+                color: eventTypesColors[eventType],
+                description: "-"
+            }
+        }
+
         cal.push(data)
         setcalendarData(cal)
         handleClose()
@@ -102,6 +121,12 @@ const CalendarWindow = () => {
             .then(response => response)
     }
 
+    if (sessionStorage.getItem("user") === "Desautorizado") {
+        return (
+            <ErrorWindow/>
+        )
+    }
+
     // mostrar pantalla de carga mientras se carga el calendario
     if (calendarData.length === 0) {
         return (
@@ -128,7 +153,8 @@ const CalendarWindow = () => {
                 />
             </div>
             <PopUp show={Show}
-                   handleClose={handleClose} handleShow={handleShow}
+                   handleClose={handleClose}
+                   handleShow={handleShow}
                    events={eventsSelected}
                    eventTypes={Object.keys(createEventTypesColors)}
                    handleSave={handleSave}

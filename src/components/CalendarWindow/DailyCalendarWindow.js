@@ -256,16 +256,32 @@ const DailyCalendarWindow = (props) => {
     }
 
     // guardar los eventos nuevos
-    const handleSave = (eventType) => (event) => {
+    const handleSave = (eventType, description, finalDate) => (event) => {
         let cal = [...cellsCalendarData]
-        const data = {
-            name: eventType,
-            startDate: dateSelected,
-            endDate: dateSelected,
-            color: eventTypesColors[eventType],
-            celula: String(cellSelected),
-            allowDelete: true
+        let data = {}
+        if (eventType === "Parada Programada") {
+            data = {
+                name: eventType,
+                startDate: dateSelected,
+                endDate: finalDate,
+                color: eventTypesColors[eventType],
+                celula: String(cellSelected),
+                allowDelete: true,
+                description: description
+            }
         }
+        else {
+             data = {
+                name: eventType,
+                startDate: dateSelected,
+                endDate: finalDate,
+                color: eventTypesColors[eventType],
+                celula: String(cellSelected),
+                allowDelete: true,
+                description: "-"
+            }
+        }
+
         cal.push(data)
         setcellsCalendarData(cal)
         handleClose()

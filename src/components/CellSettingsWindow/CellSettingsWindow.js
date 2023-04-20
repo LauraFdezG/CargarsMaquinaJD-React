@@ -7,6 +7,7 @@ import {Button, Table} from "react-bootstrap";
 import Spreadsheet from "react-spreadsheet";
 import EditableSpreadSheet from "./EditableSpreadSheet";
 import {DropdownList} from "react-widgets/cjs";
+import ErrorWindow from "../ErrorWindow/ErrorWindow";
 
 const CellSettingsWindow = (props) => {
     const [cellSettings, setcellSettings] = useState([])
@@ -157,6 +158,11 @@ const CellSettingsWindow = (props) => {
         setcurrentTable(table)
     }
 
+    if (sessionStorage.getItem("user") !== "Administrador" && sessionStorage.getItem("user") !== "Manager") {
+        return (
+            <ErrorWindow/>
+        )
+    }
 
     if (cellSettings.length*cellOpTypes.length*desglosesMotor.length*desglosesInternos.length === 0) {
         return (
@@ -166,6 +172,7 @@ const CellSettingsWindow = (props) => {
             </div>
         )
     }
+
     const tables = {
         cellSettings: {data: cellSettings, fileName:"ajustes_celula_cargas_de_maquina.xlsx"},
         cellOpTypes: {data: cellOpTypes, fileName: "tabla_celulas_operaciones.xlsx"},
