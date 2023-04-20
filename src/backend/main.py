@@ -11,7 +11,9 @@ from Packages.constants import no_labor_days_folder, resources_folder
 from Packages.get_general_labor_days import get_general_labor_days, save_no_labor_days, get_cell_labor_days
 from Packages.get_master_table import get_master_table
 from Packages.get_orders_table import get_orders_table
+from Packages.get_hrs import get_hrs
 from Packages.save_master_table import save_master_table
+from Packages.save_master_table import save_hrs_table
 import warnings
 
 from Packages.send_excel_as_response import send_excel_as_response
@@ -48,6 +50,22 @@ def _save_master_table():
     save_master_table(df)
     return 'saved'
 
+@app.route("/_get_hrs", methods=['GET'])
+def _get_hrs():
+    df = get_hrs()
+    df = df.fillna('null')
+    data = df.to_dict('records')
+    resp = flask.jsonify(data)
+    return resp
+
+@app.route("/_save_hrs_table", methods=['POST'])
+def _save_hrs_table():
+    data = request.data
+    data = data.decode('utf-8')
+    data = ast.literal_eval(data)
+    df = pd.DataFrame.from_records(data)
+    save_hrs_table(df)
+    return 'saved'
 
 @app.route("/_get_general_calendar", methods=["GET"])
 def _get_general_calendar():
@@ -114,6 +132,22 @@ def _get_fiscal_calendar():
 @app.route("/_get_cell_settings", methods=["GET"])
 def _get_cell_settings():
     data = pd.read_excel(os.path.join(resources_folder, "ajustes_celula_cargas_de_maquina.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_roles_settings", methods=["GET"])
+def _get_roles_table():
+    data = pd.read_excel(os.path.join(resources_folder, "roles_table.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_hrs_table", methods=["GET"])
+def _get_hrs_table():
+    data = pd.read_excel(os.path.join(resources_folder, "hrs_table.xlsx"))
     df = pd.DataFrame(data)
     df = df.to_dict("records")
     return flask.jsonify(df)
@@ -196,6 +230,15 @@ def get_desgloses_internos():
 @app.route("/_get_desgloses_motor", methods=["GET"])
 def get_desgloses_motor():
     data = pd.read_excel(os.path.join(resources_folder, "desglose_piezas_engranajes_motor.xlsx"))
+    df = pd.DataFrame(data)
+    df = df.fillna("null")
+    df = df.to_dict("records")
+    return flask.jsonify(df)
+
+
+@app.route("/_get_roles", methods=["GET"])
+def get_roles():
+    data = pd.read_excel(os.path.join(resources_folder, "roles_table.xlsx"))
     df = pd.DataFrame(data)
     df = df.fillna("null")
     df = df.to_dict("records")
