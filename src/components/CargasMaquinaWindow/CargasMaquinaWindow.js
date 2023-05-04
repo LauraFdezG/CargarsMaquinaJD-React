@@ -65,6 +65,7 @@ const CargasMaquinaWindow = () => {
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
     const [HRSSTDExcel, setHRSSTDExcel] = useState([])
+    const [changedHRS, setchangedHRS] = useState([])
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -77,10 +78,11 @@ const CargasMaquinaWindow = () => {
         fetch(`${flaskAddress}_get_master_table`, body)
             .then(response => response.json())
             .then(json => {
-                console.log(json[0])
+                console.log(json)
                 for (let dict of json) {
                     dict.editedCell = false
                     dict.originalHrsSTD = dict.HorasSTD
+                    dict.ExternalHRSSTD = false
                 }
                 json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
                 setmasterTable(json)
@@ -365,24 +367,25 @@ const CargasMaquinaWindow = () => {
         let filteredTable = table.filter(dict=>dict.Celula.toString() === selectedCell.toString())
 
         let copyFilteredTable = [...filteredTable]
+        setchangedHRS([])
 
         if (HRSSTDExcel.length > 0) {
             for (let dictSTD of HRSSTDExcel) {
                 for (let dictFilt of copyFilteredTable) {
-                    if (String(dictSTD.reference) === String(dictFilt.ReferenciaSAP) &&  String(dictSTD.cell) === String(dictFilt.Celula).slice(0,3) && dictSTD.hrs !== dictFilt.originalHrsSTD) {
+                    if (String(dictSTD.reference) === String(dictFilt.ReferenciaSAP) &&  String(dictSTD.cell) === String(dictFilt.Celula).slice(0,3) && dictSTD.hrs !== dictFilt.originalHrsSTD && dictFilt.ExternalHRSSTD === false && dictSTD.hrs !== "No definir") {
+                        dictFilt.ExternalHRSSTD = true
                         dictFilt.HorasSTD = dictSTD.hrs
                         dictFilt.originalHrsSTD = dictSTD.hrs
-                        dictFilt.ExternalHRSSTD = true
-                    }
-                    else {
-                        dictFilt.ExternalHRSSTD = false
+                        // let ref = [...changedHRS]
+                        // ref.push(dictSTD.reference)
+                        // setchangedHRS(ref)
                     }
                 }
             }
         }
 
-
         setcellMasterTable(copyFilteredTable)
+        console.log(cellMasterTable)
         let settings = [...cellSettings]
         settings = settings.filter(dict => dict.CELULA.toString() === selectedCell.toString())[0]
         setNOpDict()
@@ -663,6 +666,18 @@ const CargasMaquinaWindow = () => {
 
         let cal = {...cellLaborDaysOriginal}
         setcellLaborDays(cal)
+
+        let nOps = {...nOperarios}
+
+
+        Object.entries(nOps[selectedCell]).forEach(([key, value]) => {
+            if (key !== 'originalValue') {
+                nOps[selectedCell][key] = nOps[selectedCell]['originalValue']
+            }
+        })
+
+        setnOperarios(nOps)
+        console.log(nOperarios)
     }
 
     // handler para descargar la simulacion realizada
@@ -922,7 +937,6 @@ const CargasMaquinaWindow = () => {
         getFiscalCal().then(r => r)
         getCalendarData().then(r => r)
         getMonthlyNOps().then(r => r)
-
     }
 
     // cambiar filtro de primera fecha del calendario
