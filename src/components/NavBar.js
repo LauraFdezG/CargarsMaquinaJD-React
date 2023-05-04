@@ -1,7 +1,7 @@
 import {FaBars} from "react-icons/fa"
 import "./NavBar.css"
 import { useState} from "react";
-import {Button, ButtonGroup, Dropdown, Offcanvas, Spinner} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Dropdown, Offcanvas, Row, Spinner} from "react-bootstrap";
 import {Link, useNavigate} from "react-router-dom";
 import {AiFillSetting, AiFillCalendar} from "react-icons/ai"
 import {MdAnalytics} from "react-icons/md"
@@ -173,12 +173,17 @@ const NavBar = (props) => {
         }
         if (props.title !== 'Calendario') {return}
         return(
-            <select className={'view-mode-picker'} onChange={handleCalendarClicked} value={props.currentCalendar}>
-                <option value="/calendar">General</option>
-                <option value="/monthly_calendar">Mensual por Celula</option>
-                <option value="/daily_calendar">Diario por Celula</option>
-                <option value="/resumen_paradas">Resumen Paradas</option>
-            </select>
+            <>
+                {(props.currentCalendar === "/monthly_calendar") ?
+                        <Button variant="primary" onClick={props.handleSaveCalendar}>Guardar calendario</Button>
+                    : null}
+                <select className={'view-mode-picker'} onChange={handleCalendarClicked} value={props.currentCalendar}>
+                    <option value="/calendar">General</option>
+                    <option value="/monthly_calendar">Mensual por Celula</option>
+                    <option value="/daily_calendar">Diario por Celula</option>
+                    <option value="/resumen_paradas">Resumen Paradas</option>
+                </select>
+            </>
         )
     }
 
