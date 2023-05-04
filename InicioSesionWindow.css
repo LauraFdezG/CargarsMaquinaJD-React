@@ -1,0 +1,40 @@
+.main-div {
+    margin-top: 70px;
+    width: 100%;
+    text-align: center;
+}
+
+.body-div {
+    position: relative;
+    padding-left: 500px;
+    padding-right: 500px;
+}
+
+.box-div {
+    border-color: black;
+    border-radius: 5px;
+    border-style: solid;
+    width: 100%;
+}
+
+.title {
+    font-size: x-large;
+}
+
+.login-div {
+    padding: 30px;
+    width: 100%;
+}
+
+.input {
+    width: 400px;
+}
+
+.boton-div {
+    margin-top: 10px;
+}
+
+.boton {
+    width: 400px;
+}
+
