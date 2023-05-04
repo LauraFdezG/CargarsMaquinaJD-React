@@ -93,6 +93,7 @@ const HrsWindow = () => {
                         d.hrs[dict.HorasSTD] = {'HRSSTD': dict.HorasSTD, selected: false}
                     }
                 }
+                d.hrs["No definir"] = {'HRSSTD': "No definir", selected: false}
                 if (Object.values(d.hrs).length > 1) {
                     result.push(d)
                 }
@@ -134,8 +135,7 @@ const HrsWindow = () => {
 
     // insertar los otros entries en la tabla al seleccionar el dropdown (WIP)
     const handleHRSSelected = (reference, cell, std) => {
-        console.log(reference)
-        console.log(std)
+
 
         let refs = [...references]
 
@@ -147,6 +147,8 @@ const HrsWindow = () => {
                 dict.hrs[std].selected = true
             }
         }
+        console.log(reference)
+        console.log(std)
         setreferences(refs)
     }
 
