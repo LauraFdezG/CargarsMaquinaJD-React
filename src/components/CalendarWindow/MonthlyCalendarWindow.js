@@ -52,6 +52,7 @@ const MonthlyCalendarWindow = () => {
     const [cellsFilter, setcellsFilter] = useState([])
     const [teamFilter, setTeamsFilter] = useState([])
     const [fiscalCal, setfiscalCal] = useState([])
+    const [mensualData, setmensualData] = useState([])
 
     // obtener lista de celulas
     const getCellsList = async () => {
@@ -224,6 +225,9 @@ const MonthlyCalendarWindow = () => {
     // obetener dias laborales por cada mes del año
     const getLaborDaysPerMonth = (cell) => {
         const years = [...new Set(calendar.map(x=>x.FiscalYear))]
+        // let copyMensualData = [...mensualData]
+        // let newEntry = {}
+        // newEntry["Celula"] = cell
         return (
             years.map(year=>{
                 let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
@@ -245,25 +249,58 @@ const MonthlyCalendarWindow = () => {
                         let cellMonthData = []
                         let bg_color = "white"
                         if (cell !== null) {
-                            cellMonthData = cellsCalendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.celula.toString() === cell.toString() && dict.name !== "Fin mes fiscal")
-                            for (let dict of cellMonthData) {
-                                let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
-                                if (addedDates.includes(date) === false) {
-                                    filteredMonthData.push(dict)
-                                    addedDates.push(date)
+                            // console.log(cell)
+                            for (let dict of cellsCalendarData) {
+
+                                if (dict.celula.toString() === cell.toString() && dict.name !== "Fin mes fiscal") {
+                                    let date1 = new Date(dict.startDate)
+                                    let date2 = new Date(dict.endDate)
+                                    let Difference_In_Time = date2.getTime() - date1.getTime()
+                                    let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24)
+
+                                    if (Difference_In_Days.toFixed(0).toString() === "0") {
+                                        let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
+                                        for (let c of currentMonthCal) {
+                                            if (addedDates.includes(date) === false && c.month.toString() === dict.startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString() && dict.startDate.getDate().toString() === c.day.toString()) {
+                                                filteredMonthData.push(dict)
+                                                addedDates.push(date)
+                                                cellMonthData.push(dict)
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        Difference_In_Days = (Difference_In_Time / (1000 * 3600 * 24)) + 1
+                                        for (let i = 0; i < Difference_In_Days.toFixed(0); i++) {
+                                            let startDate = new Date(dict.startDate).addDays(i)
+                                            let date = `${startDate.getDate()}-${startDate.getMonth()}-${startDate.getFullYear()}`
+                                            for (let c of currentMonthCal) {
+                                                if (addedDates.includes(date) === false && c.day.toString() === startDate.getDate().toFixed(0).toString() && c.month.toString() === startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString()) {
+                                                    filteredMonthData.push(dict)
+                                                    addedDates.push(date)
+                                                    let newDict = {...dict}
+                                                    newDict.startDate = startDate
+                                                    cellMonthData.push(newDict)
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                            // newEntry[year.toString() + month.toString()] = currentMonthCal.length - filteredMonthData.length
+
                             if (cellMonthData.length > 0) {
                                 bg_color = "red"
                             }
                             return (
                                 <td key={index} style={{background:bg_color}} data-value={JSON.stringify(cellMonthData)} onClick={handleMonthClicked}>
                                     <div className={'cell-title-col'} style={{justifyContent: "flex-start"}} onClick={handleMonthClicked} id={JSON.stringify(cellMonthData)}>
-                                        {currentMonthCal.length -filteredMonthData.length}
+                                        {currentMonthCal.length - filteredMonthData.length}
                                     </div>
                                 </td>
                             )
                         }
+                        // setmensualData(copyMensualData)
+
                         return (
                             <th key={index}>
                                 <text className={'cell-title-col'} style={{justifyContent: "flex-start"}}>
@@ -289,7 +326,13 @@ const MonthlyCalendarWindow = () => {
             let date = new Date(dict.startDate)
             let month = date.getMonth()+1
             if (month < 10) {month = `0${month}`}
-            message = message + `Fecha: ${date.getDate()}-${month}-${date.getFullYear()}    Tipo de Evento: ${dict.name}\n`
+            if (dict.name === "Parada Programada"){
+                message = message + `Fecha: ${date.getDate()}-${month}-${date.getFullYear()}   Tipo: ${dict.name}   Descripcion: ${dict.description}\n`
+            }
+            else {
+                message = message + `Fecha: ${date.getDate()}-${month}-${date.getFullYear()}    Tipo de Evento: ${dict.name}\n`
+            }
+
         }
         if (data.length === 0) {return}
         alert(message)
@@ -305,8 +348,105 @@ const MonthlyCalendarWindow = () => {
         return true
     }
 
+    // handler para descargar el calendario
+    const handleSaveMonthCalendar = () => {
+        let copyMensualData = [...mensualData]
+        // eslint-disable-next-line array-callback-return
+        cellsList.map((cell, index)=>{
+            console.log(cell)
+            const years = [...new Set(calendar.map(x=>x.FiscalYear))]
+
+            let newEntry = {}
+            newEntry["Celula"] = cell
+
+            // eslint-disable-next-line array-callback-return
+            years.map(year=>{
+                let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
+                let months = [...new Set(currentYearCal.map(x=>x.FiscalMonth))]
+                // eslint-disable-next-line array-callback-return
+                months.map((month, index)=>{
+                    let currentMonthCal = currentYearCal.filter(dict=>dict.FiscalMonth === month)
+                    let monthData = calendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.name !== "Fin mes fiscal")
+                    // filtrar fechas duplicadas
+                    let addedDates = []
+                    let filteredMonthData = []
+                    for (let dict of monthData) {
+                        let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
+                        if (addedDates.includes(date) === false) {
+                            filteredMonthData.push(dict)
+                            addedDates.push(date)
+                        }
+                    }
+
+                    if (cell !== null) {
+                        // console.log(cell)
+                        // console.log(month)
+                        // console.log(year)
+                        for (let dict of cellsCalendarData) {
+                            if (dict.celula.toString() === cell.toString() && dict.name !== "Fin mes fiscal") {
+                                let date1 = new Date(dict.startDate)
+                                let date2 = new Date(dict.endDate)
+                                let Difference_In_Time = date2.getTime() - date1.getTime()
+                                let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24)
+
+                                if (Difference_In_Days.toFixed(0).toString() === "0") {
+                                    let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
+                                    for (let c of currentMonthCal) {
+                                        if (addedDates.includes(date) === false && c.month.toString() === dict.startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString() && dict.startDate.getDate().toString() === c.day.toString()) {
+                                            filteredMonthData.push(dict)
+                                            addedDates.push(date)
+                                        }
+                                    }
+                                }
+                                else {
+                                    Difference_In_Days = (Difference_In_Time / (1000 * 3600 * 24)) + 1
+                                    for (let i = 0; i < Difference_In_Days.toFixed(0); i++) {
+                                        let startDate = new Date(dict.startDate).addDays(i)
+                                        let date = `${startDate.getDate()}-${startDate.getMonth()}-${startDate.getFullYear()}`
+                                        for (let c of currentMonthCal) {
+                                            if (addedDates.includes(date) === false && c.day.toString() === startDate.getDate().toFixed(0).toString() && c.month.toString() === startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString()) {
+                                                filteredMonthData.push(dict)
+                                                addedDates.push(date)
+                                                let newDict = {...dict}
+                                                newDict.startDate = startDate
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        newEntry[year.toString() + '-' + month.toString()] = currentMonthCal.length - filteredMonthData.length
+
+                    }
+
+                })
+            })
+            copyMensualData.push(newEntry)
+
+        })
+        setmensualData(copyMensualData)
+
+        console.log(copyMensualData)
+
+        console.log(mensualData)
+        const body = {
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json",
+            },
+            body: JSON.stringify(copyMensualData)
+        }
+        fetch(`${flaskAddress}_export_month_calendar`, body)
+            .then(res => res.blob())
+            .then(blob => {
+                let FileSaver = require('file-saver');
+                FileSaver.saveAs(blob, `calendario_mes.xlsx`);
+            })
+    }
+
     // pantalla de carga mientras se obtienen los datos
-    if (calendarData.length === 0 || masterTable.length === 0 ||cellsList.length === 0 || fiscalCal.length === 0) {
+    if (calendarData.length === 0 || masterTable.length === 0 || cellsList.length === 0 || fiscalCal.length === 0) {
         return (
             <div>
                 <NavBar title={'Calendario'} currentCalendar={'/monthly_calendar'}/>
@@ -317,7 +457,11 @@ const MonthlyCalendarWindow = () => {
 
     return (
         <div>
-            <NavBar title={'Calendario'} currentCalendar={'/monthly_calendar'}/>
+            <NavBar
+                title={'Calendario'}
+                currentCalendar={'/monthly_calendar'}
+                handleSaveCalendar={handleSaveMonthCalendar}
+            />
             <div className={'daily-cal-filters-container cellList'}>
                 <DropdownMultiselect
                     options={cellsList}
