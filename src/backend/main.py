@@ -195,6 +195,26 @@ def export_resumen():
     return send_res_as_response(df, filename="simulation")
 
 
+@app.route("/_export_month_calendar", methods=["POST"])
+def export_month_calendar():
+    content_list = getPOST()
+
+    col_names = list(content_list[0].keys())
+
+    df = pd.DataFrame(columns=col_names)
+
+    for cell in content_list:
+        aux = []
+        for col in col_names:
+            aux.append(cell[col])
+
+        df.loc[-1] = aux
+        df.index = df.index + 1
+        df = df.sort_index()
+
+    return send_res_as_response(df, filename="simulation")
+
+
 @app.route("/_get_monthly_nops", methods=["GET"])
 def get_monthly_nops():
     with open(os.path.join(resources_folder, "nro_op_mensual.json")) as json_file:
