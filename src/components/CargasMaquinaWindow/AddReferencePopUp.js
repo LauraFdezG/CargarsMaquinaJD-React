@@ -30,7 +30,7 @@ const AddReferencePopUp = (props) => {
     refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
     const [refsSelected, setrefsSelected] = useState([])
     const [references, setreferences] = useState([])
-    const [defaultSelection, setdefaultSelection] = useState([])
+    const [originals, setoriginals] = useState(props.originalmasterTable.filter(dict => dict.Celula === props.cell))
 
     useEffect(()=>{
         let values = []
@@ -102,13 +102,18 @@ const AddReferencePopUp = (props) => {
     }
 
     const setDefault = () => {
-        let refsInOriginalMasterTable = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
-        refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
-        const defaultRefs = refsInOriginalMasterTable.map((ref) => {
+        // let originalRefs = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
+        // originalRefs = Array.from(new Set(originalRefs.map((dict) => dict.ReferenciaSAP)))
+
+        let originalRefs = Array.from(new Set(originals.map((dict) => dict.ReferenciaSAP)))
+
+        console.log(originalRefs)
+        const defaultRefs = originalRefs.map((ref) => {
             return (
                 {label: ref, value: ref}
             )
         })
+        console.log(defaultRefs)
 
         setrefsSelected(defaultRefs)
     }
@@ -133,9 +138,9 @@ const AddReferencePopUp = (props) => {
                 />
             </Modal.Body>
             <Modal.Footer>
-                <Button onClick={setDefault}>
-                    Restablecer
-                </Button>
+                {/*<Button onClick={setDefault}>*/}
+                {/*    Restablecer*/}
+                {/*</Button>*/}
                 <Button onClick={addSelectedReferences}>
                     Aceptar Cambios
                 </Button>

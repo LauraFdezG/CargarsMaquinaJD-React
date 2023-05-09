@@ -13,6 +13,7 @@ import {json, useNavigate} from "react-router-dom";
 import AddReferencePopUp from "./AddReferencePopUp";
 import DateFilter from "./DateFilter";
 import ErrorWindow from "../ErrorWindow/ErrorWindow"
+import {m} from "framer-motion";
 
 const monthDictionary = {
     0:'Ene',
@@ -65,7 +66,7 @@ const CargasMaquinaWindow = () => {
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
     const [HRSSTDExcel, setHRSSTDExcel] = useState([])
-    const [changedHRS, setchangedHRS] = useState([])
+
 
     // descargar tabla de configuraciones
     const getmasterTable = async () => {
@@ -367,7 +368,6 @@ const CargasMaquinaWindow = () => {
         let filteredTable = table.filter(dict=>dict.Celula.toString() === selectedCell.toString())
 
         let copyFilteredTable = [...filteredTable]
-        setchangedHRS([])
 
         if (HRSSTDExcel.length > 0) {
             for (let dictSTD of HRSSTDExcel) {
@@ -644,6 +644,7 @@ const CargasMaquinaWindow = () => {
             if (dict.CELULA.toString() === selectedCell.toString()) {
                 dict.PRODUCTIVIDAD = dict.OriginalPRODUCTIVIDAD
                 dict.ABSENTISMO = dict.OriginalABSENTISMO
+                // opType = dict.o
                 break
             }
         }
@@ -656,28 +657,42 @@ const CargasMaquinaWindow = () => {
         }
         setordersTable(orders)
 
-        let mTable = [...masterTable]
-
-        for (let dict of mTable) {
-            dict.HorasSTD = dict.originalHrsSTD
-            dict.editedCell = false
+        const body = {
+            method:"GET",
+            headers: {
+                "Content-Type":"application/json"
+            }
         }
-        setmasterTable(mTable)
+        fetch(`${flaskAddress}_get_master_table`, body)
+            .then(response => response.json())
+            .then(json => {
+                console.log(json)
+                for (let dict of json) {
+                    dict.editedCell = false
+                    dict.originalHrsSTD = dict.HorasSTD
+                    dict.ExternalHRSSTD = false
+                }
+                json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
+                setmasterTable(json)
+                setoriginalMasterTable(json)
+            })
 
         let cal = {...cellLaborDaysOriginal}
         setcellLaborDays(cal)
 
         let nOps = {...nOperarios}
 
-
-        Object.entries(nOps[selectedCell]).forEach(([key, value]) => {
-            if (key !== 'originalValue') {
-                nOps[selectedCell][key] = nOps[selectedCell]['originalValue']
+        for (let dict of settings) {
+            if (dict.CELULA.toString() === selectedCell.toString()) {
+                Object.entries(nOps[selectedCell]).forEach(([key, value]) => {
+                    nOps[selectedCell][key] = dict.N_OPERARIOS
+                })
             }
-        })
+        }
 
         setnOperarios(nOps)
-        console.log(nOperarios)
+        setmonthlyNOps({})
+
     }
 
     // handler para descargar la simulacion realizada
