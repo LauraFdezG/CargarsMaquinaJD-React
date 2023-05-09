@@ -45,7 +45,25 @@ const InicioSesionWindow = () => {
         }
         // window.location.href = '/cargas_maquina'
 
-        document.getElementById("user-role").style.backgroundColor = "rgba(0,0,0,0)"
+        if (sessionStorage.getItem("user") === "Desautorizado") {
+            document.getElementById("user-role").textContent = 'No está autorizado'
+            document.getElementById("user-role").style.color = "red"
+        }
+
+        if (sessionStorage.getItem("user") === "Usuario") {
+            document.getElementById("user-role").textContent = 'Bienvenido Usuario'
+            document.getElementById("user-role").style.color = "black"
+        }
+
+        if (sessionStorage.getItem("user") === "Manager") {
+            document.getElementById("user-role").textContent = 'Bienvenido Manager'
+            document.getElementById("user-role").style.color = "black"
+        }
+
+        if (sessionStorage.getItem("user") === "Administrador") {
+            document.getElementById("user-role").textContent = 'Bienvenido Administrador'
+            document.getElementById("user-role").style.color = "black"
+        }
 
     }
 
@@ -67,8 +85,9 @@ const InicioSesionWindow = () => {
                 <div className={"body-div"}>
                     <div className={"box-div"}>
                         <div className={"title"}>
-                            <a>Cargas de Maquinas EYE</a>
+                            <h2>Cargas de Maquinas EYE</h2>
                         </div>
+                        <text style={{color: "white"}} id={"user-role"}></text>
                         <div className={"login-div"}>
                             <input className={"input"} placeholder={"Usuario"} id={"input-user"}></input>
                             <br/>
@@ -76,7 +95,6 @@ const InicioSesionWindow = () => {
                                 <button id={"boton-entrada"} className={"boton"} onClick={setUser}>Entrar</button>
                             </div>
                         </div>
-                        <text style={{color: "white"}} id={"user-role"}>Bienvenido</text>
                     </div>
                 </div>
             </div>
