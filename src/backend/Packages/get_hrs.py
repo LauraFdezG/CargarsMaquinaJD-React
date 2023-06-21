@@ -7,7 +7,8 @@ import os
 
 def get_hrs() -> pd.DataFrame:
     """Funcion que ejecuta un query en la bd
-    y devuelve una columna con todas las referencias"""
+    y devuelve una columna con todas las referencias y las horas estandar
+    una referencia puede tener varias horas estandar"""
     connection = pymssql.connect(server='Fgetcesql1\inst1', database='TrabajoEquipo')
     text_query = "SELECT ref.ReferenciaSAP, ref.Celula, eq.NombreEquipo, dep.Minifabrica, dep.CodMinif, tiempos.HorasSTD " \
                  " FROM TReferencias ref " \
