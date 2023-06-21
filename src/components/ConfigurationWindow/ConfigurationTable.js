@@ -209,6 +209,7 @@ const ConfigurationTable = () => {
         return result
     }
 
+    // guardara simulacion para los ajustes de referencia
     const handleSaveSimulation = () => {
         const contentsDict = {
             masterTable: masterTable

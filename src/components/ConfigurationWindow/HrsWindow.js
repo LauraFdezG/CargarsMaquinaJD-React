@@ -56,7 +56,6 @@ const HrsWindow = () => {
             })
     }
 
-
     // obtener la master table al iniciar la aplicacion
     useEffect(() => {
         get_hrs().then(r => r)
@@ -102,7 +101,7 @@ const HrsWindow = () => {
 
         })
 
-        let excelData = [... HRSSTDExcel]
+        let excelData = [...HRSSTDExcel]
 
         for (let dict of result) {
             for (let excHrs of excelData) {
@@ -135,8 +134,6 @@ const HrsWindow = () => {
 
     // insertar los otros entries en la tabla al seleccionar el dropdown (WIP)
     const handleHRSSelected = (reference, cell, std) => {
-
-
         let refs = [...references]
 
         for (let dict of refs) {
@@ -152,7 +149,7 @@ const HrsWindow = () => {
         setreferences(refs)
     }
 
-    // guardar cambios cada ves que se modifica un porcentaje
+    // guardar cambios cada vez que se modifica una hora estandar
     const saveChanges = () => {
         let HRSSTD = []
         for (let ref_row of references) {
@@ -201,6 +198,7 @@ const HrsWindow = () => {
         }
     }
 
+    // guardar simulacion para las horas estandar
     const handleSaveSimulation = () => {
         const contentsDict = {
             hrstable: HRSSTDExcel
