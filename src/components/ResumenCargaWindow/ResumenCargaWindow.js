@@ -40,7 +40,7 @@ const ResumenCargaWindow = () => {
     const [cellSettings, setcellSettings] = useState([])
     const [correctCellList, setcorrectCellList] = useState([])
     const [departmentList, setdepartmentList] = useState(["920", "924", "925"])
-    const [filterList, setfilterList] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP ACT', 'Nº OP NEC', 'TOTAL PIEZAS'])
+    const [filterList, setfilterList] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP TIT', 'Nº T ACT', 'Nº T NEC', 'JORNADA N', 'JORNADA E', 'TOTAL PIEZAS'])
     const [firstCalendarDate, setfirstCalendarDate] = useState(new Date().addDays(-1).addMonth(1))
     const [fiscalCal, setfiscalCal] = useState([])
     const [isButtonLoading, setisButtonLoading] = useState(false)
@@ -54,8 +54,8 @@ const ResumenCargaWindow = () => {
     const [originalMasterTable, setoriginalMasterTable] = useState([])
     const [resumenData, setresumenData] = useState({})
     const [selectedCells, setselectedCells] = useState([])
-    const [selectedDepartments, setselectedDepartments] = useState(["920", "924", "925"])
-    const [selectedFilters, setselectedFilters] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP ACT', 'Nº OP NEC', 'TOTAL PIEZAS'])
+    const [selectedDepartments, setselectedDepartments] = useState(["920", "924"])
+    const [selectedFilters, setselectedFilters] = useState(['HRS STD', 'HRS NEC PEDIDOS', 'HRS DISP', 'Nº OP TIT', 'Nº T ACT', 'Nº T NEC', 'JORNADA N', 'JORNADA E', 'TOTAL PIEZAS'])
     const [selectedOperations, setselectedOperations] = useState(["TT", "Shot P", "Rodar", "Induccion", "Prensa", "Brochar", "Mecanizado", "Rect Int", "Rect Dient", "Marcado", "Revenir"])
     const [showAddCellPopUp, setshowAddCellPopUp] = useState(false)
     const [showAddFilterPopUp, setshowAddFilterPopUp] = useState(false)
@@ -309,8 +309,62 @@ const ResumenCargaWindow = () => {
                 let customNOp = undefined
                 try {customNOp = montlynops[dict.CELULA][month]}
                 catch (error) {}
-                cell[month] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
-                cell["originalValue"] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
+                cell[month] = customNOp === undefined ? dict.N_TURNOS_ACT : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.N_TURNOS_ACT : customNOp
+            }
+            nOps[dict.CELULA] = cell
+        }
+        return nOps
+    }
+
+    // crear diccionario de Nro de Operarios titulares por mes
+    const setNOpDictTit = (laborDays) => {
+        let montlynops = {...montlyNOps}
+        let nOps = {}
+        for (let dict of cellSettings) {
+            let cell = {}
+            for (let month in laborDays) {
+                let customNOp = undefined
+                try {customNOp = montlynops[dict.CELULA][month]}
+                catch (error) {}
+                cell[month] = customNOp === undefined ? dict.JORNADA_NORMAL + dict.JORNADA_ESPECIAL : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.JORNADA_NORMAL + dict.JORNADA_ESPECIAL : customNOp
+            }
+            nOps[dict.CELULA] = cell
+        }
+        return nOps
+    }
+
+    // crear diccionario de Nro de Operarios titulares por mes jornada normal
+    const setNOpDictJN = (laborDays) => {
+        let montlynops = {...montlyNOps}
+        let nOps = {}
+        for (let dict of cellSettings) {
+            let cell = {}
+            for (let month in laborDays) {
+                let customNOp = undefined
+                try {customNOp = montlynops[dict.CELULA][month]}
+                catch (error) {}
+                cell[month] = customNOp === undefined ? dict.JORNADA_NORMAL : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.JORNADA_NORMAL : customNOp
+            }
+            nOps[dict.CELULA] = cell
+        }
+        return nOps
+    }
+
+    // crear diccionario de Nro de Operarios titulares por mes jornada especial
+    const setNOpDictJE = (laborDays) => {
+        let montlynops = {...montlyNOps}
+        let nOps = {}
+        for (let dict of cellSettings) {
+            let cell = {}
+            for (let month in laborDays) {
+                let customNOp = undefined
+                try {customNOp = montlynops[dict.CELULA][month]}
+                catch (error) {}
+                cell[month] = customNOp === undefined ? dict.JORNADA_ESPECIAL : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.JORNADA_ESPECIAL : customNOp
             }
             nOps[dict.CELULA] = cell
         }
@@ -333,10 +387,10 @@ const ResumenCargaWindow = () => {
         getCalendar().then(r => r)
     }, [fiscalCal])
 
-    // getdata for resumen
+    // funcion que calcula los datos para mostrarlos en el resumen
     const getData = () => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
-
+        alert("Contruyendo el resumen")
         let data = {}
         for (let filter of filterList){
             let filterData = {}
@@ -350,6 +404,9 @@ const ResumenCargaWindow = () => {
 
                 let labDays = getCellLaborDaysPerMonth(cell)
                 let nOps = setNOpDict(labDays)
+                let nOps_tit = setNOpDictTit(labDays)
+                let nOps_JN = setNOpDictJN(labDays)
+                let nOps_JE = setNOpDictJE(labDays)
 
                 if (settings.ACTIVA === "SI") {
                     console.log(cell)
@@ -389,8 +446,6 @@ const ResumenCargaWindow = () => {
 
                             totalCell += (isNaN(totalHrsSTDNec) || totalHrsSTDNec > 9999999999) ? 0 : totalHrsSTDNec
                             cellData[month] = totalHrsSTDNec.toFixed(2)
-
-
                         }
 
                         if (filter === "HRS DISP") {
@@ -403,13 +458,19 @@ const ResumenCargaWindow = () => {
                             cellData[month] = hrsDisponibles.toFixed(2)
                         }
 
-                        if (filter === "Nº OP ACT") {
+                        if (filter === "Nº OP TIT") {
+                            let operarios_tit = nOps_tit[cell][month]
+                            totalCell += (isNaN(operarios_tit) || operarios_tit > 9999999999) ? 0 : operarios_tit
+                            cellData[month] = operarios_tit.toFixed(0)
+                        }
+
+                        if (filter === "Nº T ACT") {
                             let operarios = nOps[cell][month]
                             totalCell += (isNaN(operarios) || operarios > 9999999999) ? 0 : operarios
                             cellData[month] = operarios.toFixed(2)
                         }
 
-                        if (filter === "Nº OP NEC") {
+                        if (filter === "Nº T NEC") {
                             // obtener numero operarios necesarios
                             let laborDays = labDays[month]
                             let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
@@ -425,6 +486,18 @@ const ResumenCargaWindow = () => {
 
                             totalCell += (isNaN(nroOpNecesarios) || nroOpNecesarios > 9999999999) ? 0 : nroOpNecesarios
                             cellData[month] = nroOpNecesarios.toFixed(2)
+                        }
+
+                        if (filter === "JORNADA N") {
+                            let operarios_jn = nOps_JN[cell][month]
+                            totalCell += (isNaN(operarios_jn) || operarios_jn > 9999999999) ? 0 : operarios_jn
+                            cellData[month] = operarios_jn
+                        }
+
+                        if (filter === "JORNADA E") {
+                            let operarios_je = nOps_JE[cell][month]
+                            totalCell += (isNaN(operarios_je) || operarios_je > 9999999999) ? 0 : operarios_je
+                            cellData[month] = operarios_je
                         }
 
                         if (filter === "TOTAL PIEZAS") {
@@ -445,7 +518,6 @@ const ResumenCargaWindow = () => {
                                 if (editedCell) {productionPerc = 1}
                                 totalMonthQty = totalMonthQty + monthQty*productionPerc
                             }
-
                             totalCell += (isNaN(totalMonthQty) || totalMonthQty > 9999999999) ? 0 : totalMonthQty
                             cellData[month] = totalMonthQty.toFixed(0)
                         }
@@ -455,11 +527,8 @@ const ResumenCargaWindow = () => {
                     }else{
                         cellData["total"] = totalCell.toFixed(2)
                     }
-
                     filterData[cell] = cellData
                 }
-
-
             }
             data[filter] = filterData
         }
@@ -561,14 +630,14 @@ const ResumenCargaWindow = () => {
         )
     }
 
-    // fill totals
+    // funcion para rellenar los totales de la tabla
     const totalRows = () => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
 
         return(
             selectedFilters.map((filter) => {
                 let totalFinal = 0
-                if (filter === "TOTAL PIEZAS"){
+                if (filter === "TOTAL PIEZAS" || filter === "JORNADA N" || filter === "JORNADA E" || filter === "Nº OP TIT"){
                     return (
                         <tr>
                             <td>{filter}</td>
@@ -628,7 +697,7 @@ const ResumenCargaWindow = () => {
 
     }
 
-    if (sessionStorage.getItem("user") === "Desautorizado") {
+    if (sessionStorage.getItem("user") === "Desautorizado" || sessionStorage.getItem("user") === "Manufactura") {
         return (
             <ErrorWindow/>
         )
@@ -721,8 +790,8 @@ const ResumenCargaWindow = () => {
                                                             <tr key={key+filter}>
                                                                 <td>{filter}</td>
                                                                 {monthsList.map((month, index) => {
-                                                                    if (filter === "Nº OP NEC"){
-                                                                        let style = {background: resumenData[filter][cell][month] >resumenData["Nº OP ACT"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                                                    if (filter === "Nº T NEC"){
+                                                                        let style = {background: resumenData[filter][cell][month] >resumenData["Nº T ACT"][cell][month] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
                                                                         return (
                                                                             <td key={filter+month} style={style}>{resumenData[filter][cell][month]}</td>
                                                                         )
@@ -742,7 +811,6 @@ const ResumenCargaWindow = () => {
                                     }
                                 }
                             }
-
                         })}
                         <tr style={{textAlign: "center", fontSize: "larger", background: "lightgray"}}>
                             <td colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+3}>
@@ -753,8 +821,6 @@ const ResumenCargaWindow = () => {
                         </tbody>
                     </Table>
                 </div>
-
-
             </div>
         </div>
     )
