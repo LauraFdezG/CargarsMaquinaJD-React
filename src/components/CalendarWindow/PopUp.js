@@ -83,7 +83,10 @@ const PopUp = (props) => {
                     </Modal.Header>
                     <Modal.Body>
                         {props.events.map((event, index) => {
-                            const forbiddenDeletes = ['Fin de Semana', 'Fin mes fiscal']
+                            let forbiddenDeletes = ['Fin de Semana', 'Fin mes fiscal']
+                            if (sessionStorage.getItem("user") !== "Administrador") {
+                                forbiddenDeletes = ['Fin de Semana', 'Fin mes fiscal', 'Parada Programada', 'DAP', 'RJI', 'Festivo Local', 'Festivo', 'Inhabil', 'Fiesta Comunidad']
+                            }
                             return (
                                 <>
                                     <Row key={index}>

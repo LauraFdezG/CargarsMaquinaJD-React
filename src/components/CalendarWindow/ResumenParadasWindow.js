@@ -97,12 +97,14 @@ const ResumenParadasWindow = () => {
         setfirstCalendarDate(date)
     }
 
+    // si el usuario no esta autorizado la aplicacion dara error
     if (sessionStorage.getItem("user") === "Desautorizado") {
         return (
             <ErrorWindow/>
         )
     }
 
+    // mantener la pestaña de carga mientras se actualizan los datos
     if (calendarData.length*cellsCalendarData.length === 0) {
         return (
             <div>

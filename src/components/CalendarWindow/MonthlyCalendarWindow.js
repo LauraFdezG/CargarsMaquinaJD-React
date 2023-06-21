@@ -222,7 +222,7 @@ const MonthlyCalendarWindow = () => {
         )
     }
 
-    // obetener dias laborales por cada mes del año
+    // obetener dias laborales por cada mes del año, las paradas proramadas se restan en cada mes
     const getLaborDaysPerMonth = (cell) => {
         const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         // let copyMensualData = [...mensualData]
@@ -414,16 +414,12 @@ const MonthlyCalendarWindow = () => {
                                     }
                                 }
                             }
-
                         }
                         newEntry[year.toString() + '-' + month.toString()] = currentMonthCal.length - filteredMonthData.length
-
                     }
-
                 })
             })
             copyMensualData.push(newEntry)
-
         })
         setmensualData(copyMensualData)
 
