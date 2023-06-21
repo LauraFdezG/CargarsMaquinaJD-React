@@ -48,10 +48,12 @@ const CargasMaquinaWindow = () => {
     const [calendarData, setcalendarData] = useState([])
     const [cellsCalendarData, setcellsCalendarData] = useState([])
     const [cellLaborDays, setcellLaborDays] = useState({})
+    const [cellLaborDaysChanged, setcellLaborDaysChanged] = useState({})
     const [cellLaborDaysOriginal, setCellLaborDaysOriginal] = useState({})
     const [productividadCell, setproductividadCell] = useState(1.05)
     const [absentismoCell, setabsentismoCell] = useState(0.08)
     const [nOperarios, setnOperarios] = useState(4.2)
+    const [nOperariosTit, setnOperariosTit] = useState(4.2)
     const [cellSettings, setcellSettings] = useState([])
     const [isButtonLoading, setisButtonLoading] = useState(false)
     const [showPopUp, setshowPopUp] = useState(false)
@@ -66,6 +68,7 @@ const CargasMaquinaWindow = () => {
     const [lastUpdatedTime, setlastUpdatedTime] = useState("")
     const [importedCellLaborDays, setImportedCellLaborDays] = useState([])
     const [HRSSTDExcel, setHRSSTDExcel] = useState([])
+    const [entireMasterTable, setentireMasterTable] = useState([])
 
 
     // descargar tabla de configuraciones
@@ -79,15 +82,15 @@ const CargasMaquinaWindow = () => {
         fetch(`${flaskAddress}_get_master_table`, body)
             .then(response => response.json())
             .then(json => {
-                console.log(json)
                 for (let dict of json) {
                     dict.editedCell = false
                     dict.originalHrsSTD = dict.HorasSTD
                     dict.ExternalHRSSTD = false
                 }
-                json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
-                setmasterTable(json)
-                setoriginalMasterTable(json)
+                let json1 = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
+                setmasterTable(json1)
+                setoriginalMasterTable(json1)
+                setentireMasterTable(json)
             })
     }
 
@@ -225,17 +228,19 @@ const CargasMaquinaWindow = () => {
             })
     }
 
-    // obetener dias laborales por cada mes del año
+    // obetener dias laborales por cada mes del año, se descuentas las paradas programadas
     const getLaborDaysPerMonth = async () => {
         const years = [...new Set(calendar.map(x=>x.FiscalYear))]
         let laborDays = {}
         let originalLaborDays = {}
+        let changedLD = {}
         // eslint-disable-next-line array-callback-return
         years.map(year=>{
             let currentYearCal = calendar.filter(dict=> dict.FiscalYear === year)
             let months = [...new Set(currentYearCal.map(x=>x.FiscalMonth))]
             // eslint-disable-next-line array-callback-return
             months.map((month, index)=>{
+
                 let currentMonthCal = currentYearCal.filter(dict=>dict.FiscalMonth === month)
                 let monthData = calendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.name !== "Fin mes fiscal")
                 // filtrar fechas duplicadas
@@ -250,12 +255,40 @@ const CargasMaquinaWindow = () => {
                 }
                 let cellMonthData = []
                 if (selectedCell !== null) {
-                    cellMonthData = cellsCalendarData.filter(dict => isInFiscalMonth(dict.startDate, month, year) && dict.celula.toString() === selectedCell.toString() && dict.name !== "Fin mes fiscal")
-                    for (let dict of cellMonthData) {
-                        let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
-                        if (addedDates.includes(date) === false) {
-                            filteredMonthData.push(dict)
-                            addedDates.push(date)
+                    // console.log(cell)
+                    for (let dict of cellsCalendarData) {
+
+                        if (dict.celula.toString() === selectedCell.toString() && dict.name !== "Fin mes fiscal") {
+                            let date1 = new Date(dict.startDate)
+                            let date2 = new Date(dict.endDate)
+                            let Difference_In_Time = date2.getTime() - date1.getTime()
+                            let Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24)
+
+                            if (Difference_In_Days.toFixed(0).toString() === "0") {
+                                let date = `${dict.startDate.getDate()}-${dict.startDate.getMonth()}-${dict.startDate.getFullYear()}`
+                                for (let c of currentMonthCal) {
+                                    if (addedDates.includes(date) === false && c.month.toString() === dict.startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString() && dict.startDate.getDate().toString() === c.day.toString()) {
+                                        filteredMonthData.push(dict)
+                                        addedDates.push(date)
+                                        cellMonthData.push(dict)
+                                    }
+                                }
+                            } else {
+                                Difference_In_Days = (Difference_In_Time / (1000 * 3600 * 24)) + 1
+                                for (let i = 0; i < Difference_In_Days.toFixed(0); i++) {
+                                    let startDate = new Date(dict.startDate).addDays(i)
+                                    let date = `${startDate.getDate()}-${startDate.getMonth()}-${startDate.getFullYear()}`
+                                    for (let c of currentMonthCal) {
+                                        if (addedDates.includes(date) === false && c.day.toString() === startDate.getDate().toFixed(0).toString() && c.month.toString() === startDate.getMonth().toFixed(0).toString() && c.year.toString() === dict.startDate.getFullYear().toFixed(0).toString()) {
+                                            filteredMonthData.push(dict)
+                                            addedDates.push(date)
+                                            let newDict = {...dict}
+                                            newDict.startDate = startDate
+                                            cellMonthData.push(newDict)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -267,10 +300,19 @@ const CargasMaquinaWindow = () => {
                     laborDays[fMonth] = cellLaborDays[fMonth]
                 }
                 originalLaborDays[fMonth] = currentMonthCal.length - filteredMonthData.length
+
+                if (currentMonthCal.length !== originalLaborDays[fMonth]) {
+                    changedLD[fMonth] = 1
+                }
+                else {
+                    changedLD[fMonth] = 0
+                }
             })
         })
-        setcellLaborDays(laborDays)
+        setcellLaborDays(originalLaborDays)
         setCellLaborDaysOriginal(originalLaborDays)
+        setcellLaborDaysChanged(changedLD)
+        console.log(cellLaborDaysChanged)
     }
 
     // obtener tabla con ajustes de la celulas: productividad, absentismo, nro turnos etc
@@ -317,15 +359,28 @@ const CargasMaquinaWindow = () => {
                 let customNOp = undefined
                 try {customNOp = montlynops[dict.CELULA][month]}
                 catch (error) {}
-                cell[month] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
-                cell["originalValue"] = customNOp === undefined ? dict.N_OPERARIOS : customNOp
+                cell[month] = customNOp === undefined ? dict.N_TURNOS_ACT : customNOp
+                cell["originalValue"] = customNOp === undefined ? dict.N_TURNOS_ACT : customNOp
             }
             nOps[dict.CELULA] = cell
         }
+
         setnOperarios(nOps)
+
+        let nops_tit = {}
+        for (let dict of cellSettings) {
+            let cell_tit = {}
+            for (let month in cellLaborDays) {
+                cell_tit[month] = dict.JORNADA_NORMAL + dict.JORNADA_ESPECIAL
+                cell_tit["originalValue"] = dict.JORNADA_NORMAL + dict.JORNADA_ESPECIAL
+            }
+            nops_tit[dict.CELULA] = cell_tit
+        }
+
+        setnOperariosTit(nops_tit)
     }
 
-    // obtener tabla con hrs
+    // obtener tabla con hrsstd
     const getHrsTable = async () => {
         const msg = {
             method:"GET",
@@ -476,7 +531,6 @@ const CargasMaquinaWindow = () => {
                 break
             }
         }
-
         setmasterTable(mTable)
     }
 
@@ -581,6 +635,34 @@ const CargasMaquinaWindow = () => {
         )
     }
 
+    // piezas producidas por mes visualizacion
+    const partsProducedV = (ref: string) => {
+        const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
+        let productionPerc = masterTable.filter(dict=>dict.Celula.toString() === selectedCell.toString() && dict.ReferenciaSAP === ref)[0]
+        if (productionPerc === undefined) {productionPerc = 0}
+        else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
+        return (
+            monthsList.map((month, index) => {
+                let monthQty = 0
+                let editedCell = false
+                for (let dict of ordersTable) {
+                    if (dict.FiscalMonth === month && dict["Reference"] === ref) {
+                        monthQty += dict.Qty
+                        editedCell = dict.editedCell
+                    }
+                }
+                if (editedCell) {productionPerc = 1}
+                let style = {background: editedCell ? "rgba(255,165,0,0.82)" : "none"}
+                let inputInfo = {fiscalMonth:month, reference: ref}
+                return (
+                    <td key={index} style={style}>
+                        {(monthQty*productionPerc).toFixed(0)}
+                    </td>
+                )
+            })
+        )
+    }
+
     // piezas totaltes producidas, piezas por dia, Total hrs STD, max turno, y avg turno por ref
     const totalPartsProduced = (ref: string, hrsSTD: number) => {
         const monthsList = [...new Set(calendar.map(dict=>`${monthDictionary[dict.FiscalMonth]}-${dict.FiscalYear-2000}`))]
@@ -637,7 +719,7 @@ const CargasMaquinaWindow = () => {
         )
     }
 
-    // restaurar ajustes de celula a su valor original
+    // restaurar ajustes de celula a su valor original, restaura las referencias, las hrsstd, pedidos, operarios y dias laborables
     const restoreCellSettings = () => {
         let settings = [...cellSettings]
         for (let dict of settings) {
@@ -666,15 +748,14 @@ const CargasMaquinaWindow = () => {
         fetch(`${flaskAddress}_get_master_table`, body)
             .then(response => response.json())
             .then(json => {
-                console.log(json)
                 for (let dict of json) {
                     dict.editedCell = false
                     dict.originalHrsSTD = dict.HorasSTD
                     dict.ExternalHRSSTD = false
                 }
-                json = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
-                setmasterTable(json)
-                setoriginalMasterTable(json)
+                let json1 = json.filter(dict => dict["Porcentaje de Pedidos"] !== 0) // no mostrar si el porc pedidos = 0
+                setmasterTable(json1)
+                setoriginalMasterTable(json1)
             })
 
         let cal = {...cellLaborDaysOriginal}
@@ -685,14 +766,13 @@ const CargasMaquinaWindow = () => {
         for (let dict of settings) {
             if (dict.CELULA.toString() === selectedCell.toString()) {
                 Object.entries(nOps[selectedCell]).forEach(([key, value]) => {
-                    nOps[selectedCell][key] = dict.N_OPERARIOS
+                    nOps[selectedCell][key] = dict.N_TURNOS_ACT
                 })
             }
         }
 
         setnOperarios(nOps)
         setmonthlyNOps({})
-
     }
 
     // handler para descargar la simulacion realizada
@@ -1008,7 +1088,8 @@ const CargasMaquinaWindow = () => {
         setcellLaborDays(cellLaborDaysOriginal)
     }
 
-    if (sessionStorage.getItem("user") === "Desautorizado") {
+    // si no esta autorizado dara lugar a error
+    if (sessionStorage.getItem("user") === "Desautorizado" || sessionStorage.getItem("user") === "Manufactura") {
         return (
             <ErrorWindow/>
         )
@@ -1024,43 +1105,46 @@ const CargasMaquinaWindow = () => {
         )
     }
 
-    return (
-        <div>
-            <AddReferencePopUp show={showAddRefPopUp}
-                               close={handleAddRef}
-                               masterTable={masterTable}
-                               setmasterTable={addRefs}
-                               originalmasterTable={originalMasterTable}
-                               cell={selectedCell}
-                               //selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
-                               cellMasterTable={cellMasterTable}
-            />
-            <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
-            <NavBar title={"Cargas de Maquina"}
-                    handleSaveSimulation={handleSaveSimulation}
-                    isCargaMaquinaButtonLoading={isButtonLoading}
-                    handleImportSimulation={handleImportSimulation}
-                    updateOrdersTable={updateOrders}
-                    ordersUpdating={ordersUpdating}
-                    lastUpdate={lastUpdatedTime}
-            />
-            <div className={"production-table-container"}>
-                <h5>Ajustes de celula</h5>
-                <div className={'cargas-maquina-settings-container'}>
-                    <h6>Celula:</h6>
-                    <DropdownList
-                        style={{width: "100px"}}
-                        defaultValue={selectedCell}
-                        data={cellsList}
-                        placeholder={'Celula'}
-                        value={selectedCell} onChange={handleCellSelected}/>
-                    {cellSettingsInputs()}
-                    <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
-                    <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
-                    <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
-                </div>
-                <Table striped bordered hover className={"production-table"} size={"sm"}>
-                    <thead>
+    // codigo para usuarios que pueden simular
+    if (sessionStorage.getItem("user") === "Manager" || sessionStorage.getItem("user") === "Administrador" || sessionStorage.getItem("user") === "Usuario"){
+        return (
+            <div>
+                <AddReferencePopUp show={showAddRefPopUp}
+                                   close={handleAddRef}
+                                   masterTable={masterTable}
+                                   setmasterTable={addRefs}
+                                   originalmasterTable={originalMasterTable}
+                                   cell={selectedCell}
+                    //selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
+                                   cellMasterTable={cellMasterTable}
+                                   entireMasterTable={entireMasterTable}
+                />
+                <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
+                <NavBar title={"Cargas de Maquina"}
+                        handleSaveSimulation={handleSaveSimulation}
+                        isCargaMaquinaButtonLoading={isButtonLoading}
+                        handleImportSimulation={handleImportSimulation}
+                        updateOrdersTable={updateOrders}
+                        ordersUpdating={ordersUpdating}
+                        lastUpdate={lastUpdatedTime}
+                />
+                <div className={"production-table-container"}>
+                    <h5>Ajustes de celula</h5>
+                    <div className={'cargas-maquina-settings-container'}>
+                        <h6>Celula:</h6>
+                        <DropdownList
+                            style={{width: "100px"}}
+                            defaultValue={selectedCell}
+                            data={cellsList}
+                            placeholder={'Celula'}
+                            value={selectedCell} onChange={handleCellSelected}/>
+                        {cellSettingsInputs()}
+                        <button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>
+                        <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
+                        <button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>
+                    </div>
+                    <Table striped bordered hover className={"production-table"} size={"sm"}>
+                        <thead>
                         <tr style={{borderColor:"white"}}>
                             <th></th>
                             <th></th>
@@ -1078,8 +1162,8 @@ const CargasMaquinaWindow = () => {
                         <tr>
                             {productionMonthHeaders()}
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {cellMasterTable.map((dict, key)=>{
                             return (
                                 <tr key={key}>
@@ -1124,7 +1208,9 @@ const CargasMaquinaWindow = () => {
                             <th colSpan={2}>DIAS HABILES</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
                                 let editedCell = cellLaborDays[value] !== cellLaborDaysOriginal[value]
+                                let colorParada = cellLaborDaysChanged[value] === 1
                                 let style = {background: editedCell ? "rgba(255,165,0,0.82)" : "none"}
+                                let styleColor = {color: colorParada ? "red" : "black"}
                                 return (
                                     <td key={index} style={style}>
                                         <input value={cellLaborDays[value]} className={'parts-produced-entry'} onChange={handleCellCalendarChanged} id={JSON.stringify(value)}/>
@@ -1199,7 +1285,18 @@ const CargasMaquinaWindow = () => {
                             <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
-                            <th colSpan={2}>Nº OP ACTUALES</th>
+                            <th colSpan={2}>Nº OP TITULARES</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                return (
+                                    <td key={index}>{nOperariosTit[selectedCell][value].toFixed(2)}
+                                    </td>
+                                )
+                            })}
+                            <th>{nOperariosTit[selectedCell].originalValue.toFixed(2)}</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Nº TURNOS ACTUALES</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
                                 let style = {background: nOperarios[selectedCell][value] !== nOperarios[selectedCell].originalValue ? "rgba(255,165,0,0.82)" : "none"}
                                 return (
@@ -1216,7 +1313,7 @@ const CargasMaquinaWindow = () => {
                             <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>
-                            <th colSpan={2}>Nº OP NECESARIOS</th>
+                            <th colSpan={2}>Nº TURNOS NECESARIOS</th>
                             {Object.keys(cellLaborDays).map((value, index) => {
                                 // obtener piezas producidas en el mes
                                 let laborDays = cellLaborDays[value]
@@ -1238,11 +1335,236 @@ const CargasMaquinaWindow = () => {
                             {totalNOpNec()}
                             <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
-                    </tbody>
-                </Table>
+                        </tbody>
+                    </Table>
+                </div>
             </div>
-        </div>
-    )
+        )
+    }
+
+    // codigo para usuarios visualizadores
+    if (sessionStorage.getItem("user") === "Visualizar"){
+        return (
+            <div>
+                <AddReferencePopUp show={showAddRefPopUp}
+                                   close={handleAddRef}
+                                   masterTable={masterTable}
+                                   setmasterTable={addRefs}
+                                   originalmasterTable={originalMasterTable}
+                                   cell={selectedCell}
+                    //selectedRefs={Array.from(new Set(cellMasterTable.map((dict) => dict.ReferenciaSAP)))}
+                                   cellMasterTable={cellMasterTable}
+                                   entireMasterTable={entireMasterTable}
+                />
+                <UploadFilePopUp show={showPopUp} close={closePopUp} applySimulationData={applySimulationData}/>
+                <NavBar title={"Cargas de Maquina"}
+                        handleSaveSimulation={handleSaveSimulation}
+                        isCargaMaquinaButtonLoading={isButtonLoading}
+                        handleImportSimulation={handleImportSimulation}
+                        updateOrdersTable={updateOrders}
+                        ordersUpdating={ordersUpdating}
+                        lastUpdate={lastUpdatedTime}
+                />
+                <div className={"production-table-container"}>
+                    <h5>Ajustes de celula</h5>
+                    <div className={'cargas-maquina-settings-container'}>
+                        <h6>Celula:</h6>
+                        <DropdownList
+                            style={{width: "100px"}}
+                            defaultValue={selectedCell}
+                            data={cellsList}
+                            placeholder={'Celula'}
+                            value={selectedCell} onChange={handleCellSelected}/>
+                        {/*{cellSettingsInputs()}*/}
+                        {/*<button className={'restore-cm-settings-button'} onClick={handleAddRef}>Agregar Referencia(s)</button>*/}
+                        <DateFilter initDate={minCalendarDate} lastDate={lastCalendarDate} setLastDate={handleLastDayChanged} setFirstDate={handleFirstDayChanged} maxDate={maxCalendarDate}/>
+                        {/*<button className={'restore-cm-settings-button'} onClick={restoreCellSettings}>Restaurar ajustes</button>*/}
+                    </div>
+                    <Table striped bordered hover className={"production-table"} size={"sm"}>
+                        <thead>
+                        <tr style={{borderColor:"white"}}>
+                            <th></th>
+                            <th></th>
+                            <th colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+1}>
+                                <h2 className={'production-table-title'}>CARGAS DE MAQUINA EYE CELULA: {selectedCell}</h2>
+                            </th>
+                        </tr>
+                        <tr style={{borderColor:"white"}}>
+                            <th></th>
+                            <th></th>
+                            <th colSpan={monthDiff(lastCalendarDate, firstCalendarDate)+1} style={{background:"#e3e3e3", color:"black"}}>
+                                <div className={"production-table-title"}>NUMERO DE PIEZAS</div>
+                            </th>
+                        </tr>
+                        <tr>
+                            {productionMonthHeaders()}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {cellMasterTable.map((dict, key)=>{
+                            return (
+                                <tr key={key}>
+                                    <td style={{color: dict.ExternalHRSSTD ? "red" : "black"}}>
+                                        {dict.ReferenciaSAP}
+                                    </td>
+                                    <td style={{background: dict.editedCell ? "rgba(255,165,0,0.82)" : "none"}}>
+                                        {dict.HorasSTD}
+                                    </td>
+                                    {partsProducedV(dict.ReferenciaSAP)}
+                                    {totalPartsProduced(dict.ReferenciaSAP, dict.HorasSTD)}
+                                </tr>
+                            )
+                        })}
+                        <tr>
+                            <td></td>
+                            <th>TOTAL</th>
+                            {totalRefsProdMonthly()}
+                            {totalRefsProd()}
+                            {totalPartsPerDay()}
+                            {totalHRSSTD()}
+                        </tr>
+                        <tr>
+                            <td colSpan={26} className={'production-table-separator'}></td>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            {Object.keys(cellLaborDays).map(value => {
+                                return (
+                                    <th>{value}</th>
+                                )
+                            })}
+                            <th>TOTAL</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>DIAS HABILES</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                let editedCell = cellLaborDays[value] !== cellLaborDaysOriginal[value]
+                                let style = {background: editedCell ? "rgba(255,165,0,0.82)" : "none"}
+                                return (
+                                    <td key={index} style={style}>
+                                        {cellLaborDays[value]}
+                                    </td>
+                                )
+                            })}
+                            {totalLaborDays()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>HRS STD</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                // obtener piezas producidas en el mes
+                                let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+                                let totalHrsSTD = 0
+                                for (let dict of ordersTable) {
+                                    if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                                        let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                                        totalHrsSTD += dict.Qty * hrsSTD/100
+                                    }
+                                }
+                                return (
+                                    <td key={index}>{totalHrsSTD.toFixed(2)}</td>
+                                )
+                            })}
+                            {totalHRSSTD()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>HRS NEC. PEDIDOS</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                // obtener piezas producidas en el mes
+                                let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+                                let totalHrsSTD = 0
+                                for (let dict of ordersTable) {
+                                    if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                                        let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                                        totalHrsSTD += dict.Qty * hrsSTD/100
+                                    }
+                                }
+                                totalHrsSTD = totalHrsSTD/productividadCell
+                                return (
+                                    <td key={index}>{totalHrsSTD.toFixed(2)}</td>
+                                )
+                            })}
+                            {totalHrsSTDNec()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>HRS DISPONIBLES</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                // obtener piezas producidas en el mes
+                                let laborDays = cellLaborDays[value]
+                                let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+                                let totalHrsSTD = 0
+                                for (let dict of ordersTable) {
+                                    if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                                        let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                                        totalHrsSTD += dict.Qty * hrsSTD/100
+                                    }
+                                }
+                                let hrsDisponibles = (nOperarios[selectedCell][value]*laborDays*8)/(1+absentismoCell)
+                                return (
+                                    <td key={index}>{hrsDisponibles.toFixed(2)}</td>
+                                )
+                            })}
+                            {totalHrsDisp()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Nº OP TITULARES</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                return (
+                                    <td key={index}>{nOperariosTit[selectedCell][value].toFixed(2)}
+                                    </td>
+                                )
+                            })}
+                            <th>{nOperariosTit[selectedCell].originalValue.toFixed(2)}</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Nº TURNOS ACTUALES</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                let style = {background: nOperarios[selectedCell][value] !== nOperarios[selectedCell].originalValue ? "rgba(255,165,0,0.82)" : "none"}
+                                return (
+                                    <td key={index} style={style}>
+                                        {nOperarios[selectedCell][value]}
+                                    </td>
+                                )
+                            })}
+                            <th>{nOperarios[selectedCell].originalValue}</th>
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>Nº TURNOS NECESARIOS</th>
+                            {Object.keys(cellLaborDays).map((value, index) => {
+                                // obtener piezas producidas en el mes
+                                let laborDays = cellLaborDays[value]
+                                let references = cellMasterTable.map(dict => dict.ReferenciaSAP)
+                                let totalHrsSTD = 0
+                                for (let dict of ordersTable) {
+                                    if (dict.FiscalMonth === value && references.includes(dict["Reference"])) {
+                                        let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
+                                        totalHrsSTD += dict.Qty * hrsSTD/100
+                                    }
+                                }
+                                totalHrsSTD = totalHrsSTD/productividadCell
+                                let nroOpNecesarios = (totalHrsSTD)/(8*laborDays*(1-absentismoCell))
+                                let style = {background: nroOpNecesarios > nOperarios[selectedCell][value] ? "rgba(255,0,0,0.67)" : "rgba(48,255,144,0.67)"}
+                                return (
+                                    <td key={index} style={style}>{nroOpNecesarios.toFixed(2)}</td>
+                                )
+                            })}
+                            {totalNOpNec()}
+                            <td colSpan={4} className={"secondary-table-right-filler"}></td>
+                        </tr>
+                        </tbody>
+                    </Table>
+                </div>
+            </div>
+        )
+    }
+
 }
 
 export default CargasMaquinaWindow

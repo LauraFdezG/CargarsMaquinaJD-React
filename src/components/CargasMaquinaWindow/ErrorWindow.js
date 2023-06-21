@@ -1,6 +1,8 @@
 import NavBar from "../NavBar";
 import "./ErrorWindow.css"
 
+
+// ventana de error
 const ErrorWindow = (props) => {
     return (
         <div>

@@ -3,7 +3,7 @@ import { default as ReactSelect } from "react-select";
 import {useEffect, useState} from "react";
 import {components} from "react-select";
 
-
+//ULTIMA VERSION
 const Option = (props) => {
     return (
         <div>
@@ -20,17 +20,11 @@ const Option = (props) => {
 };
 
 const AddReferencePopUp = (props) => {
-    // const initialRefs = props.selectedRefs.map((ref) => {
-    //     return (
-    //         {label: ref, value: ref}
-    //     )
-    // })
 
     let refsInOriginalMasterTable = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
     refsInOriginalMasterTable = Array.from(new Set(refsInOriginalMasterTable.map((dict) => dict.ReferenciaSAP)))
     const [refsSelected, setrefsSelected] = useState([])
     const [references, setreferences] = useState([])
-    const [originals, setoriginals] = useState(props.originalmasterTable.filter(dict => dict.Celula === props.cell))
 
     useEffect(()=>{
         let values = []
@@ -60,6 +54,7 @@ const AddReferencePopUp = (props) => {
     const addSelectedReferences = () => {
         let master = [...props.originalmasterTable]
         let m = [...master]
+        let entireMT = [...props.entireMasterTable]
         let refs = []
         for (let dict of refsSelected) {
             refs.push(dict.value)
@@ -67,25 +62,62 @@ const AddReferencePopUp = (props) => {
         m = [...new Map(m.map(item =>
             [item["ReferenciaSAP"], item])).values()];
         m = m.filter(dict => refs.includes(dict.ReferenciaSAP))
-        for (let dict of m) {
-            let newRef = {
-                Celula: props.cell,
-                CodMinif: dict.CodMinif,
-                HorasSTD: 0,
-                Minifabrica: dict.Minifabrica,
-                NombreEquipo: dict.NombreEquipo,
-                "Porcentaje de Pedidos": 1,
-                ReferenciaSAP: dict.ReferenciaSAP,
-                "Tipo de Operacion": dict["Tipo de Operacion"],
-                editedCell: dict.editedCell,
-                originalHrsSTD: dict.originalHrsSTD
+
+        for (let r of refs) {
+            let newRef = {}
+
+            for (let dict of entireMT) {
+
+                if (dict.ReferenciaSAP.toString() === r.toString() && dict.Celula.toString() === props.cell.toString()) {
+
+                    newRef = {
+                        Celula: props.cell,
+                        CodMinif: dict.CodMinif,
+                        HorasSTD: dict.HorasSTD,
+                        Minifabrica: dict.Minifabrica,
+                        NombreEquipo: dict.NombreEquipo,
+                        "Porcentaje de Pedidos": 1,
+                        ReferenciaSAP: dict.ReferenciaSAP,
+                        "Tipo de Operacion": dict["Tipo de Operacion"],
+                        editedCell: dict.editedCell,
+                        originalHrsSTD: dict.originalHrsSTD
+                    }
+                    console.log(newRef)
+                }
             }
-            if (refsInOriginalMasterTable.includes(dict.ReferenciaSAP)) {
-                continue
+            if (Object.keys(newRef).length === 0) {
+                for (let dict of m) {
+                    newRef = {
+                        Celula: props.cell,
+                        CodMinif: dict.CodMinif,
+                        HorasSTD: 0,
+                        Minifabrica: dict.Minifabrica,
+                        NombreEquipo: dict.NombreEquipo,
+                        "Porcentaje de Pedidos": 1,
+                        ReferenciaSAP: r,
+                        "Tipo de Operacion": dict["Tipo de Operacion"],
+                        editedCell: dict.editedCell,
+                        originalHrsSTD: 0
+                    }
+                    if (refsInOriginalMasterTable.includes(dict.ReferenciaSAP)) {
+                        continue
+                    }
+                }
+            }
+            let exists = false
+
+            for (let dict of master) {
+                if (dict.Celula === props.cell && dict.ReferenciaSAP === r) {
+                    exists = true
+                }
             }
 
-            master.push(newRef)
+            if (exists === false) {
+                console.log(newRef)
+                master.push(newRef)
+            }
         }
+
         let selectedRefsList = refsSelected.map((dict) => dict.value)
         let refsToDelete = refsInOriginalMasterTable.filter(ref => selectedRefsList.includes(ref) === false)
         //console.log(refsToDelete)
@@ -101,22 +133,6 @@ const AddReferencePopUp = (props) => {
         props.close()
     }
 
-    const setDefault = () => {
-        // let originalRefs = props.originalmasterTable.filter(dict => dict.Celula === props.cell)
-        // originalRefs = Array.from(new Set(originalRefs.map((dict) => dict.ReferenciaSAP)))
-
-        let originalRefs = Array.from(new Set(originals.map((dict) => dict.ReferenciaSAP)))
-
-        console.log(originalRefs)
-        const defaultRefs = originalRefs.map((ref) => {
-            return (
-                {label: ref, value: ref}
-            )
-        })
-        console.log(defaultRefs)
-
-        setrefsSelected(defaultRefs)
-    }
 
     return (
         <Modal show={props.show} onHide={props.close}>
@@ -138,9 +154,6 @@ const AddReferencePopUp = (props) => {
                 />
             </Modal.Body>
             <Modal.Footer>
-                {/*<Button onClick={setDefault}>*/}
-                {/*    Restablecer*/}
-                {/*</Button>*/}
                 <Button onClick={addSelectedReferences}>
                     Aceptar Cambios
                 </Button>
