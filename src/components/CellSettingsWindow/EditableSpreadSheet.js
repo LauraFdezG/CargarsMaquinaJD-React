@@ -14,7 +14,7 @@ const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 // funcion para array de columnas por el siguiente orden de prioridad
 const sortByPreferredColumns = (array) => {
     // minifabica -> grupos -> celulas -> cajas -> refeferencias
-    let preferences = {"Usuario": 0, "Rol":1, "minifabrica": 2, "grupos":3, "celulas":4, "cajas":5, "referencias":6, "Departamento":7, "Operacion":8}
+    let preferences = {"Usuario": 0, "Rol":1, "minifabrica": 2, "grupos":3, "celulas":4, "cajas":5, "referencias":6, "Departamento":7, "Operacion":8, "ABSENTISMO":9, "PRODUCTIVIDAD":10, "JORNADA_NORMAL":11, "JORNADA_ESPECIAL":12, "N_TURNOS_ACT":13}
     let columnOrder = {}
     for (let item of array) {
         for (let key in preferences) {

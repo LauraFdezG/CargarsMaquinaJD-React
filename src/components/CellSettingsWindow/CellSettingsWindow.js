@@ -16,6 +16,7 @@ const CellSettingsWindow = (props) => {
     const [desglosesInternos, setDesglosesInternos] = useState([])
     const [desglosesMotor, setDesglosesMotor] = useState([])
     const [currentFileName, setCurrentFileName] = useState("")
+    const [cellsList, setcellsList] = useState([])
 
     // obtener tabla con ajustes de la celulas: productividad, absentismo, nro turnos etc
     const getCellSettings = async () => {
@@ -30,10 +31,26 @@ const CellSettingsWindow = (props) => {
             .then(json => {
                 json.map((dict, index) => {
                     dict.id = index
+                    if (cellsList.includes(dict.CELULA.toString()) === false) {
+                        cellsList.push(dict.CELULA.toString())
+                    }
+
                     return (dict)
                 })
-                setcellSettings(json)
-                setcurrentTable(json)
+                cellsList.sort()
+
+                let sort_json = []
+
+                for (let c of cellsList) {
+                    for (let dict of json) {
+                        if (c === dict.CELULA.toString()) {
+                            sort_json.push(dict)
+                        }
+                    }
+                }
+
+                setcellSettings(sort_json)
+                setcurrentTable(sort_json)
                 setCurrentFileName("ajustes_celula_cargas_de_maquina.xlsx")
             })
     }
