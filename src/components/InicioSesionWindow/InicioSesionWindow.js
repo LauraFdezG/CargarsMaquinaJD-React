@@ -50,8 +50,18 @@ const InicioSesionWindow = () => {
             document.getElementById("user-role").style.color = "red"
         }
 
+        if (sessionStorage.getItem("user") === "Manufactura") {
+            document.getElementById("user-role").textContent = 'Bienvenido Manufactura'
+            document.getElementById("user-role").style.color = "black"
+        }
+
         if (sessionStorage.getItem("user") === "Usuario") {
             document.getElementById("user-role").textContent = 'Bienvenido Usuario'
+            document.getElementById("user-role").style.color = "black"
+        }
+
+        if (sessionStorage.getItem("user") === "Visualizar") {
+            document.getElementById("user-role").textContent = 'Bienvenido Visualizar'
             document.getElementById("user-role").style.color = "black"
         }
 
