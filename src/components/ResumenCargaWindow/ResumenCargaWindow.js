@@ -423,8 +423,12 @@ const ResumenCargaWindow = () => {
                             let totalHrsSTD = 0
                             for (let dict of ordersTable){
                                 if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
+                                    let ref = dict["Reference"]
+                                    let productionPerc = masterTable.filter(dict3=>dict3.Celula.toString() === cell.toString() && dict3.ReferenciaSAP.toString() === ref.toString())[0]
+                                    if (productionPerc === undefined) {productionPerc = 0}
+                                    else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
                                     let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                                    totalHrsSTD += dict.Qty * hrsSTD/100
+                                    totalHrsSTD += dict.Qty * productionPerc * hrsSTD/100
                                 }
                             }
                             totalCell += (isNaN(totalHrsSTD) || totalHrsSTD > 9999999999) ? 0 : totalHrsSTD
@@ -437,8 +441,12 @@ const ResumenCargaWindow = () => {
                             let totalHrsSTDNec = 0
                             for (let dict of ordersTable){
                                 if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
+                                    let ref = dict["Reference"]
+                                    let productionPerc = masterTable.filter(dict3=>dict3.Celula.toString() === cell.toString() && dict3.ReferenciaSAP.toString() === ref.toString())[0]
+                                    if (productionPerc === undefined) {productionPerc = 0}
+                                    else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
                                     let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                                    totalHrsSTDNec += dict.Qty * hrsSTD/100
+                                    totalHrsSTDNec += dict.Qty * productionPerc * hrsSTD/100
                                 }
                             }
 
@@ -477,8 +485,12 @@ const ResumenCargaWindow = () => {
                             let totalHrsSTD = 0
                             for (let dict of ordersTable) {
                                 if (dict.FiscalMonth === month && references.includes(dict["Reference"])) {
+                                    let ref = dict["Reference"]
+                                    let productionPerc = masterTable.filter(dict3=>dict3.Celula.toString() === cell.toString() && dict3.ReferenciaSAP.toString() === ref.toString())[0]
+                                    if (productionPerc === undefined) {productionPerc = 0}
+                                    else {productionPerc = productionPerc["Porcentaje de Pedidos"]}
                                     let hrsSTD = cellMasterTable.filter(dict2 => dict2.ReferenciaSAP === dict["Reference"])[0]["HorasSTD"]
-                                    totalHrsSTD += dict.Qty * hrsSTD/100
+                                    totalHrsSTD += dict.Qty * productionPerc * hrsSTD/100
                                 }
                             }
                             totalHrsSTD = totalHrsSTD/settings.PRODUCTIVIDAD
