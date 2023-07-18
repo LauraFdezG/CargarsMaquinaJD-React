@@ -12,7 +12,7 @@ def get_orders_table() -> pd.DataFrame:
     warnings.filterwarnings("ignore")
     """Funcion que ejecuta un query en la bd
     y devuelve una columna con todas las referencias"""
-    connection = pymssql.connect(server='Fgetcesql2\inst2', database='Blade_JD')
+    connection = pymssql.connect(server='Fgetcesql16\inst1', database='Blade_JD')
     # Datos de las celulas de sergio
     text_query = "SELECT orders.DeliveryDate, Reference.Code as Reference, orders.CalculatedPendingQty " \
                  "FROM [Order] orders " \
