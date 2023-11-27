@@ -2,6 +2,7 @@ import {useState} from "react";
 import {Button, Col, Modal, Row} from "react-bootstrap";
 import flaskAddress from "../Constants";
 import {json} from "react-router-dom";
+import React from 'react';
 
 const UploadFilePopUp = (props) => {
     const [file, setfile] = useState(null)

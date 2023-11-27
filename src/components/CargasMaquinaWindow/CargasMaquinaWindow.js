@@ -14,6 +14,7 @@ import AddReferencePopUp from "./AddReferencePopUp";
 import DateFilter from "./DateFilter";
 import ErrorWindow from "../ErrorWindow/ErrorWindow"
 import {m} from "framer-motion";
+import React from 'react';
 
 const monthDictionary = {
     0:'Ene',
@@ -1324,7 +1325,7 @@ const CargasMaquinaWindow = () => {
                                     </td>
                                 )
                             })}
-                            <th>{nOperariosTit[selectedCell].originalValue.toFixed(2)}</th>
+                            <th>{nOperariosTit[selectedCell].originalValue}</th>
                             <td colSpan={4} className={"secondary-table-right-filler"}></td>
                         </tr>
                         <tr>

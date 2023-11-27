@@ -8,6 +8,7 @@ import NavBar from "../NavBar";
 import createEventTypesColors, {eventTypesColors} from "./EventTypeColors";
 import DropdownMultiselect from "react-multiselect-dropdown-bootstrap";
 import {BsFillSquareFill} from "react-icons/bs";
+import React from 'react';
 
 const monthDictionary = {
     0:'Enero',

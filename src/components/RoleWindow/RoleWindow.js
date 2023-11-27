@@ -10,6 +10,7 @@ import {motion, AnimatePresence} from "framer-motion";
 import {components} from "react-select";
 import Autocomplete from "react-widgets/Autocomplete";
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
+import React from 'react';
 
 const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 

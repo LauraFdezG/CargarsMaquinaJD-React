@@ -10,6 +10,7 @@ import createEventTypesColors, {eventTypesColors} from "./EventTypeColors";
 import {Col, Container, Row} from "react-bootstrap";
 import {BsFillSquareFill} from "react-icons/bs"
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
+import React from 'react';
 
 const CalendarWindow = () => {
     const [calendarViewMode, setcalendarViewMode] = useState('general')

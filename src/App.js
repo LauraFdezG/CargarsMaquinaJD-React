@@ -14,6 +14,7 @@ import RoleWindow from "./components/RoleWindow/RoleWindow";
 import ResumenParadasWindow from "./components/CalendarWindow/ResumenParadasWindow";
 import InicioSesionWindow from "./components/InicioSesionWindow/InicioSesionWindow";
 import HrsWindow from "./components/ConfigurationWindow/HrsWindow";
+import React from 'react';
 
 function App() {
     return (

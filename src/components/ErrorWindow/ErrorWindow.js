@@ -2,6 +2,7 @@ import NavBar from "../NavBar";
 import flaskAddress from "../Constants";
 import {useEffect, useState} from "react";
 import LoadingWindow from "../LoadingWindow";
+import React from 'react';
 
 const ErrorWindow = () => {
 

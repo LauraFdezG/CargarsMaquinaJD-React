@@ -2,6 +2,7 @@ import "./PopUp.css"
 import {Button, Col, Modal, Row} from "react-bootstrap";
 import {useState} from "react";
 import DatePicker from "react-widgets/DatePicker";
+import React from 'react';
 
 const PopUp = (props) => {
     const [selectedEventType, setselectedEventType] = useState(props.eventTypes[0])

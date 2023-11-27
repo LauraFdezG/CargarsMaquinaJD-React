@@ -8,6 +8,7 @@ import {Table} from "react-bootstrap";
 import AddPopUp from "../ResumenCargaWindow/AddPopUp";
 import DateFilter from "../CargasMaquinaWindow/DateFilter";
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
+import React from 'react';
 
 const ResumenParadasWindow = () => {
     const [calendar, setcalendar] = useState([])

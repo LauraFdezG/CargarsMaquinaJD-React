@@ -8,6 +8,7 @@ import LoadingWindow from "../LoadingWindow";
 import flaskAddress from "../Constants";
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
 import UploadFilePopUp from "../CargasMaquinaWindow/UploadFilePopUp";
+import React from 'react';
 
 
 const HrsWindow = () => {

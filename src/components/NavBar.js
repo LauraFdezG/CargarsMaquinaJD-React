@@ -10,6 +10,7 @@ import {SiJohndeere} from "react-icons/si"
 import {VscSettings} from "react-icons/vsc"
 import {RiInboxUnarchiveFill} from "react-icons/ri"
 import { MdOutlineAutoGraph, MdPersonOutline } from "react-icons/md";
+import React from 'react';
 
 const windowInfo = [
     {

@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import LoadingWindow from "../LoadingWindow";
 import "./InicioSesionWindow.css"
 import {Navigate, useNavigate} from "react-router-dom";
+import React from 'react';
 
 const InicioSesionWindow = () => {
     const [roles, setroles] = useState([])

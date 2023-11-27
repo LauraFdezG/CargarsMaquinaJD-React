@@ -5,7 +5,8 @@ import {eventTypesColors} from "./EventTypeColors";
 import LoadingWindow from "../LoadingWindow";
 import DropdownMultiselect from "react-multiselect-dropdown-bootstrap";
 import {Table} from "react-bootstrap";
-import "./DailyCalendarWindow.css"
+import "./DailyCalendarWindow.css";
+import React from 'react';
 
 const monthDictionary = {
     0:'Ene',

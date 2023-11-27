@@ -8,6 +8,7 @@ import Spreadsheet from "react-spreadsheet";
 import EditableSpreadSheet from "./EditableSpreadSheet";
 import {DropdownList} from "react-widgets/cjs";
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
+import React from 'react';
 
 const CellSettingsWindow = (props) => {
     const [cellSettings, setcellSettings] = useState([])

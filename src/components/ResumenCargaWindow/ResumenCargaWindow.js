@@ -8,7 +8,7 @@ import "./ResumenCargaWindow.css"
 import DateFilter from "../CargasMaquinaWindow/DateFilter";
 import AddPopUp from "./AddPopUp";
 import ErrorWindow from "../ErrorWindow/ErrorWindow";
-
+import React from 'react';
 
 
 const monthDictionary = {

@@ -2,6 +2,7 @@ import {Button, Modal} from "react-bootstrap";
 import { default as ReactSelect } from "react-select";
 import {useEffect, useState} from "react";
 import {components} from "react-select";
+import React from 'react';
 
 //ULTIMA VERSION
 const Option = (props) => {

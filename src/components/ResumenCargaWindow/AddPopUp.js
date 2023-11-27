@@ -2,6 +2,7 @@ import {default as ReactSelect} from "react-select";
 import {components} from "react-select";
 import {useEffect, useState} from "react";
 import {Button, Modal} from "react-bootstrap";
+import React from 'react';
 
 const AddPopUp = (props) =>{
     const [list, setlist] = useState()

@@ -7,6 +7,7 @@ import DropdownMultiselect from "react-multiselect-dropdown-bootstrap";
 import {components} from "react-select";
 import { default as ReactSelect } from "react-select";
 import {motion, AnimatePresence} from "framer-motion";
+import React from 'react';
 
 
 const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"

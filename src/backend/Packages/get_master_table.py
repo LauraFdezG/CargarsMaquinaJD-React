@@ -8,7 +8,7 @@ import os
 def get_master_table() -> pd.DataFrame:
     """Funcion que ejecuta un query en la bd
     y devuelve una columna con todas las referencias"""
-    connection = pymssql.connect(server='Fgetcesql1\inst1', database='TrabajoEquipo')
+    connection = pymssql.connect(server='Fgetcesql19\inst1', database='TrabajoEquipo')
     text_query = "SELECT ref.ReferenciaSAP, ref.Celula, eq.NombreEquipo, dep.Minifabrica, dep.CodMinif, tiempos.HorasSTD " \
                  " FROM TReferencias ref " \
                  " INNER JOIN VEquipos eq " \
